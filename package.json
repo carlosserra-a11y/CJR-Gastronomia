@@ -1,0 +1,24 @@
+{
+  "name": "cjr-gastronomia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cardápio virtual da CJR Gastronomia: experiências gastronômicas para eventos, pedido de orçamento pelo WhatsApp e painel administrativo.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.js\"",
+    "build:vendor": "esbuild node_modules/lenis/dist/lenis.mjs --bundle --format=esm --minify --target=es2020 --legal-comments=none \"--banner:js=/*! Lenis (MIT License) https://github.com/darkroomengineering/lenis */\" --outfile=js/vendor/lenis.mjs"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "lenis": "^1.3.0"
+  }
+}

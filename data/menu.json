@@ -1,0 +1,352 @@
+{
+  "schema": 1,
+  "settings": {
+    "brandName": "CJR Gastronomia",
+    "whatsapp": "",
+    "whatsappGreeting": "Olá! Vim pelo cardápio virtual da CJR Gastronomia e gostaria de mais informações.",
+    "email": "",
+    "instagram": "",
+    "serviceArea": "",
+    "showPrices": false,
+    "priceNote": "Valores de referência. A proposta final considera data, local, número de convidados, estrutura e equipe."
+  },
+  "content": {
+    "heroKicker": "Experiências gastronômicas para eventos",
+    "heroTitle": "Gastronomia que transforma o seu evento em experiência",
+    "heroText": "Coffee breaks, finger foods, buffets, mesas de frios e estações ao vivo, planejados sob medida pelo Chef Carlos Junior.",
+    "heroImage": "assets/img/chef-carlos.webp",
+    "eventTypes": ["Formaturas", "Eventos corporativos", "Casamentos", "Aniversários", "Batizados", "Confraternizações", "Celebrações especiais"],
+    "servicesIntro": "Escolha uma categoria para conhecer as opções e montar a sua experiência. Tudo pode ser ajustado ao formato do seu evento.",
+    "howTitle": "Como funciona",
+    "howIntro": "A CJR Gastronomia assume a organização gastronômica do evento, levando a estrutura e os profissionais necessários conforme o formato contratado. Você ganha praticidade, consistência na execução e uma apresentação cuidadosa.",
+    "howSteps": [
+      { "title": "Conversa inicial", "text": "Você conta sobre o evento: data, local, número de convidados e o que imagina para o momento." },
+      { "title": "Proposta sob medida", "text": "Cardápio, montagem, dinâmica de atendimento e equipe são alinhados previamente com você." },
+      { "title": "Estrutura e montagem", "text": "Levamos equipamentos e utensílios e montamos e decoramos a mesa de buffet ou de frios conforme a proposta visual." },
+      { "title": "Execução no dia", "text": "Uma equipe dimensionada para o seu evento cuida de cada detalhe, do preparo ao serviço." }
+    ],
+    "howIncludes": [
+      "Equipamentos e utensílios necessários, conforme o escopo definido",
+      "Montagem e decoração da mesa de buffet ou da mesa de frios",
+      "Equipe com chef responsável, cozinheiros, auxiliares de cozinha, garçons e copeira, conforme a necessidade",
+      "Quantidade e composição da equipe ajustadas ao número de convidados, ao local, ao tempo de serviço e ao tipo de experiência"
+    ],
+    "chefTitle": "Chef Carlos Junior",
+    "chefText": "À frente da CJR Gastronomia, o Chef Carlos Junior reúne 8 anos de formação em Gastronomia e uma trajetória de 12 anos de experiência profissional no setor. Graduado em Gastronomia pela PUCRS e com pós-graduação em Gastronomia Contemporânea, construiu sua carreira em diferentes cozinhas, restaurantes e experiências gastronômicas, desenvolvendo um olhar apurado para técnicas, sabores, apresentação e excelência no serviço.\n\nSeu trabalho é guiado pela combinação entre técnica, criatividade e hospitalidade, com o propósito de transformar cada evento em uma experiência gastronômica memorável — da escolha dos ingredientes à apresentação dos pratos, do planejamento à experiência dos convidados.",
+    "chefImage": "assets/img/chef-carlos.webp",
+    "chefStats": [
+      { "value": "12", "label": "anos de experiência profissional" },
+      { "value": "8", "label": "anos de formação em Gastronomia" },
+      { "value": "PUCRS", "label": "graduação, com pós em Gastronomia Contemporânea" }
+    ],
+    "aboutTitle": "Sobre a CJR Gastronomia",
+    "aboutText": "A CJR Gastronomia é especializada em experiências gastronômicas para eventos sociais e corporativos, com soluções personalizadas em coffee breaks, finger foods, buffets, mesas de frios e serviços especiais.\n\nMais do que servir refeições, nosso propósito é criar experiências que aproximem pessoas, valorizem os momentos e encantem os convidados. Cada serviço é planejado de acordo com as necessidades do evento, contemplando cardápio, estrutura, equipe e apresentação.",
+    "ctaTitle": "Vamos planejar o seu evento?",
+    "ctaText": "Monte a sua experiência em poucos minutos e receba uma proposta personalizada pelo WhatsApp.",
+    "privacyText": "Os dados informados no formulário de orçamento (nome, telefone, e-mail, informações do evento e observações) são usados somente para elaborar e enviar a sua proposta e para o contato sobre o evento.\n\nAo enviar, a mensagem é aberta no seu WhatsApp, e é você quem confirma o envio para a CJR Gastronomia. Este site não grava os seus dados pessoais em banco de dados. A lista de opções selecionadas fica salva apenas no seu aparelho, para você continuar de onde parou, e pode ser apagada a qualquer momento no botão \"Limpar seleção\".\n\nNão compartilhamos as suas informações com terceiros para fins de marketing. Você pode pedir a exclusão das conversas e dos dados enviados a qualquer momento pelos nossos canais de contato, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018)."
+  },
+  "categories": [
+    {
+      "id": "coffee-corporativo",
+      "name": "Coffee Corporativo",
+      "icon": "coffee",
+      "image": "",
+      "short": "Pausas bem servidas para reuniões, treinamentos e eventos empresariais.",
+      "intro": "Três composições pensadas para diferentes formatos de evento, do essencial ao premium. A composição exata, as quantidades e as eventuais substituições são ajustadas ao número de participantes e à duração do evento.",
+      "note": "",
+      "select": "one",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "pacotes", "name": "Pacotes", "note": "", "active": true,
+          "items": [
+            { "id": "coffee-break-basic", "name": "Coffee Break Basic", "tier": "Basic", "desc": "O essencial para pausas rápidas e reuniões objetivas.", "includes": ["Café", "Leite", "Suco", "Água", "Seleção de acompanhamentos conforme composição comercial definida"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "coffee-break-medium", "name": "Coffee Break Medium", "tier": "Medium", "desc": "Mais variedade, com pães, bolos e confeitaria.", "includes": ["Café", "Leite", "Suco", "Água", "Pães e acompanhamentos variados", "Bolos e itens de confeitaria conforme composição definida"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "coffee-break-premium", "name": "Coffee Break Premium", "tier": "Premium", "desc": "Uma pausa memorável, com itens artesanais e apresentação premium.", "includes": ["Café e bebidas selecionadas", "Pães artesanais e viennoiseries", "Bolos e confeitaria", "Frutas e acompanhamentos especiais", "Apresentação premium"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mesa-de-frios",
+      "name": "Mesa de Frios",
+      "icon": "board",
+      "image": "",
+      "short": "Mix de queijos e embutidos, frutas, pães, geleias e pastas.",
+      "intro": "Uma mesa farta e bonita para receber os convidados: mix de queijos e embutidos, frutas, pães, geleias e pastas, com montagem pensada para o estilo do seu evento.",
+      "note": "",
+      "select": "one",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "pacotes", "name": "Pacotes", "note": "", "active": true,
+          "items": [
+            { "id": "mesa-de-frios-basic", "name": "Mesa de Frios Basic", "tier": "Basic", "desc": "Seleção de queijos e embutidos, frutas, pães, geleias e pastas, apresentada de forma organizada.", "includes": ["Seleção de queijos e embutidos", "Frutas", "Pães", "Geleias e pastas", "Apresentação organizada"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "mesa-de-frios-medium", "name": "Mesa de Frios Medium", "tier": "Medium", "desc": "Mix ampliado de queijos e embutidos, frutas frescas, pães variados, geleias e pastas, com montagem decorativa.", "includes": ["Mix ampliado de queijos e embutidos", "Frutas frescas", "Pães variados", "Geleias e pastas", "Montagem decorativa"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "mesa-de-frios-premium", "name": "Mesa de Frios Premium", "tier": "Premium", "desc": "Seleção especial de queijos e embutidos, frutas, pães artesanais, geleias e pastas, com composição visual sofisticada.", "includes": ["Seleção especial de queijos e embutidos", "Frutas", "Pães artesanais", "Geleias e pastas", "Composição visual sofisticada"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finger-foods",
+      "name": "Finger Foods",
+      "icon": "finger",
+      "image": "",
+      "short": "Opções quentes e contemporâneas, servidas em porções individuais.",
+      "intro": "Monte a sua seleção entre carnes, frutos do mar, aves, vegetarianos, massas, fritos e doces. A quantidade de opções e de unidades por pessoa é definida na proposta, de acordo com a duração e o formato do evento.",
+      "note": "",
+      "select": "many",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "carnes", "name": "Carnes", "note": "", "active": true,
+          "items": [
+            { "id": "mini-file-mignon-ao-molho-de-vinho-tinto", "name": "Mini filé mignon ao molho de vinho tinto", "active": true },
+            { "id": "mini-beef-wellington", "name": "Mini beef Wellington", "active": true },
+            { "id": "short-rib-com-mousseline-de-batata", "name": "Short rib com mousseline de batata", "active": true },
+            { "id": "escondidinho-de-carne-de-panela", "name": "Escondidinho de carne de panela", "active": true },
+            { "id": "mini-risoto-de-file-mignon", "name": "Mini risoto de filé mignon", "active": true },
+            { "id": "arancini-de-ragu-de-carne", "name": "Arancini de ragu de carne", "active": true },
+            { "id": "mini-burger-artesanal", "name": "Mini burger artesanal", "active": true },
+            { "id": "mini-feijoadinha", "name": "Mini feijoadinha", "active": true }
+          ]
+        },
+        {
+          "id": "frutos-do-mar", "name": "Frutos do mar", "note": "", "active": true,
+          "items": [
+            { "id": "polvo-com-mousseline-de-batata-baroa", "name": "Polvo com mousseline de batata-baroa (mandioquinha), ervas e azeite", "active": true },
+            { "id": "polvo-grelhado-com-paprica-e-ervas", "name": "Polvo grelhado com páprica e ervas", "active": true },
+            { "id": "camarao-com-mousseline-de-batata-baroa", "name": "Camarão com mousseline de batata-baroa", "active": true },
+            { "id": "risoto-de-camarao-com-limao-siciliano", "name": "Risoto de camarão com limão-siciliano", "active": true },
+            { "id": "mini-bobo-de-camarao", "name": "Mini bobó de camarão", "active": true },
+            { "id": "mini-moqueca-de-camarao", "name": "Mini moqueca de camarão", "active": true },
+            { "id": "vieira-selada", "name": "Vieira selada", "active": true },
+            { "id": "brandade-de-bacalhau", "name": "Brandade de bacalhau", "active": true },
+            { "id": "ravioli-de-camarao", "name": "Ravioli de camarão", "active": true }
+          ]
+        },
+        {
+          "id": "aves", "name": "Aves", "note": "", "active": true,
+          "items": [
+            { "id": "frango-com-mousseline-de-batata-baroa", "name": "Frango com mousseline de batata-baroa", "active": true },
+            { "id": "mini-frango-a-parmegiana", "name": "Mini frango à parmegiana", "active": true },
+            { "id": "frango-crocante-com-aioli", "name": "Frango crocante com aioli", "active": true },
+            { "id": "risoto-de-frango-com-ervas", "name": "Risoto de frango com ervas", "active": true },
+            { "id": "vol-au-vent-de-frango", "name": "Vol-au-vent de frango", "active": true },
+            { "id": "sobrecoxa-desossada-ao-molho-de-mostarda", "name": "Sobrecoxa desossada ao molho de mostarda", "active": true }
+          ]
+        },
+        {
+          "id": "vegetarianos", "name": "Vegetarianos", "note": "", "active": true,
+          "items": [
+            { "id": "arancini-de-funghi", "name": "Arancini de funghi", "active": true },
+            { "id": "risoto-caprese", "name": "Risoto caprese", "active": true },
+            { "id": "cogumelos-recheados", "name": "Cogumelos recheados", "active": true },
+            { "id": "penne-ao-molho-funghi", "name": "Penne ao molho funghi", "active": true },
+            { "id": "mousseline-de-batata-baroa-com-cogumelos", "name": "Mousseline de batata-baroa com cogumelos", "active": true },
+            { "id": "mini-quiche-de-alho-poro", "name": "Mini quiche de alho-poró", "active": true },
+            { "id": "brie-crocante-com-frutas-vermelhas", "name": "Brie crocante com frutas vermelhas", "active": true },
+            { "id": "risoto-de-alho-poro-e-parmesao", "name": "Risoto de alho-poró e parmesão", "active": true }
+          ]
+        },
+        {
+          "id": "massas-e-preparacoes-especiais", "name": "Massas e preparações especiais", "note": "", "active": true,
+          "items": [
+            { "id": "mini-penne-ao-sugo", "name": "Mini penne ao sugo", "active": true },
+            { "id": "mini-penne-aos-quatro-queijos", "name": "Mini penne aos quatro queijos", "active": true },
+            { "id": "mini-penne-com-file-mignon", "name": "Mini penne com filé mignon", "active": true },
+            { "id": "risoto-de-funghi", "name": "Risoto de funghi", "active": true },
+            { "id": "risoto-de-tomate-seco-e-rucula", "name": "Risoto de tomate seco e rúcula", "active": true },
+            { "id": "mini-arroz-carreteiro", "name": "Mini arroz carreteiro", "active": true },
+            { "id": "mini-paella", "name": "Mini paella", "active": true },
+            { "id": "mini-lasanha-de-ragu", "name": "Mini lasanha de ragu", "active": true }
+          ]
+        },
+        {
+          "id": "fritos-e-crocantes", "name": "Fritos e crocantes", "note": "", "active": true,
+          "items": [
+            { "id": "dadinho-de-tapioca", "name": "Dadinho de tapioca", "active": true },
+            { "id": "croquete-de-costela-bovina", "name": "Croquete de costela bovina", "active": true },
+            { "id": "croquete-de-camarao", "name": "Croquete de camarão", "active": true },
+            { "id": "bolinho-de-bacalhau", "name": "Bolinho de bacalhau", "active": true },
+            { "id": "mini-pastel-de-carne-ou-camarao", "name": "Mini pastel de carne ou camarão", "active": true },
+            { "id": "arancini-de-parmesao", "name": "Arancini de parmesão", "active": true },
+            { "id": "croquete-de-cogumelos", "name": "Croquete de cogumelos", "active": true },
+            { "id": "mini-coxinha-de-frango-com-requeijao", "name": "Mini coxinha de frango com requeijão", "active": true },
+            { "id": "camarao-crocante-com-toque-citrico", "name": "Camarão crocante com toque cítrico", "active": true }
+          ]
+        },
+        {
+          "id": "finger-foods-doces", "name": "Finger foods doces", "note": "", "active": true,
+          "items": [
+            { "id": "mini-petit-gateau", "name": "Mini petit gâteau", "active": true },
+            { "id": "cheesecake-em-copinho", "name": "Cheesecake em copinho ou porção individual", "active": true },
+            { "id": "mini-tiramisu", "name": "Mini tiramisù", "active": true },
+            { "id": "mini-tartelete-de-limao", "name": "Mini tartelete de limão", "active": true },
+            { "id": "brownie-com-ganache", "name": "Brownie com ganache", "active": true },
+            { "id": "pavlova-individual", "name": "Pavlova individual", "active": true },
+            { "id": "mousse-de-chocolate", "name": "Mousse de chocolate", "active": true },
+            { "id": "mini-banoffee", "name": "Mini banoffee", "active": true },
+            { "id": "panna-cotta", "name": "Panna cotta", "active": true },
+            { "id": "mini-eclair-ou-choux-de-creme", "name": "Mini éclair ou choux de creme", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "buffets",
+      "name": "Buffets",
+      "icon": "cloche",
+      "image": "",
+      "short": "Seis experiências completas, do clássico brasileiro ao menu assinado pelo chef.",
+      "intro": "Buffets completos para almoços, jantares e celebrações. Cada experiência tem uma proposta própria e pode ser combinada com sobremesas e ativações.",
+      "note": "As preparações e os acompanhamentos podem ser ajustados conforme o evento e as restrições alimentares dos convidados.",
+      "select": "one",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "experiencias", "name": "Experiências", "note": "", "active": true,
+          "items": [
+            { "id": "feijoada-especial", "name": "Feijoada Especial", "tier": "Basic", "desc": "Feijoada tradicional com acompanhamentos clássicos, indicada para eventos que buscam uma experiência brasileira acolhedora.", "includes": ["Feijoada", "Arroz branco", "Farofa", "Couve refogada", "Laranja", "Vinagrete e acompanhamentos conforme proposta"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "sabores-do-dia", "name": "Sabores do Dia", "tier": "Medium", "desc": "Buffet versátil com preparações caseiras e opções equilibradas, com composição definida conforme o evento.", "includes": ["Proteína do dia", "Acompanhamentos quentes", "Arroz", "Salada", "Guarnições e complementos conforme cardápio selecionado"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "experiencia-chef-carlos-junior", "name": "Experiência Chef Carlos Junior", "tier": "Premium", "desc": "Uma proposta premium com preparações especiais e apresentação cuidadosa.", "includes": ["Salmão preparado pelo chef", "Filé mignon", "Acompanhamentos selecionados", "Saladas e guarnições especiais"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "estacao-italiana", "name": "Estação Italiana", "tier": "", "desc": "Clássicos da cozinha italiana, de massas a carnes ao molho.", "includes": ["Filé mignon ao molho funghi", "Frango à parmegiana", "Lasanha", "Arroz com ervas", "Penne ao sugo", "Fettuccine ao molho branco", "Batatas gratinadas", "Salada de folhas", "Focaccia"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "sabores-da-parrilla", "name": "Sabores da Parrilla", "tier": "", "desc": "Carnes preparadas na parrilla, com acompanhamentos tradicionais e chimichurri.", "includes": ["Maminha na parrilla", "Frango na parrilla", "Linguiça campeira", "Arroz", "Farofa", "Batatas rústicas", "Legumes grelhados", "Salada de folhas", "Vinagrete", "Chimichurri"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "brasil-contemporaneo", "name": "Brasil Contemporâneo", "tier": "", "desc": "Receitas brasileiras afetivas, com leitura contemporânea.", "includes": ["Carne de panela", "Frango assado", "Peixe em preparação inspirada na moqueca", "Arroz", "Pirão", "Farofa de banana", "Purê de mandioca", "Legumes", "Salada de folhas com frutas"], "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sobremesas",
+      "name": "Sobremesas para buffet",
+      "icon": "dessert",
+      "image": "",
+      "short": "Clássicos e contemporâneos para fechar a refeição com delicadeza.",
+      "intro": "Escolha uma seleção pronta ou monte a sua, sobremesa por sobremesa. A quantidade de opções servidas é definida na proposta.",
+      "note": "",
+      "select": "many",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [
+        { "id": "selecao-classica", "name": "Seleção Clássica", "itemIds": ["pudim-de-leite-condensado", "mousse-de-chocolate", "petit-gateau-com-sorvete", "brownie-com-ganache"] },
+        { "id": "selecao-contemporanea", "name": "Seleção Contemporânea", "itemIds": ["cheesecake-de-frutas-vermelhas", "pavlova", "tiramisu", "panna-cotta"] }
+      ],
+      "groups": [
+        {
+          "id": "sobremesas", "name": "Sobremesas", "note": "", "active": true,
+          "items": [
+            { "id": "pudim-de-leite-condensado", "name": "Pudim de leite condensado", "active": true },
+            { "id": "mousse-de-chocolate", "name": "Mousse de chocolate", "active": true },
+            { "id": "cheesecake-de-frutas-vermelhas", "name": "Cheesecake de frutas vermelhas", "active": true },
+            { "id": "petit-gateau-com-sorvete", "name": "Petit gâteau com sorvete", "active": true },
+            { "id": "tartelete-de-limao", "name": "Tartelete de limão", "active": true },
+            { "id": "pavlova", "name": "Pavlova", "active": true },
+            { "id": "tiramisu", "name": "Tiramisù", "active": true },
+            { "id": "brownie-com-ganache", "name": "Brownie com ganache", "active": true },
+            { "id": "panna-cotta", "name": "Panna cotta", "active": true },
+            { "id": "mini-banoffee", "name": "Mini banoffee", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "buffet-de-risotos",
+      "name": "Buffet de Risotos",
+      "icon": "bowl",
+      "image": "",
+      "short": "Risotos cremosos servidos em buffet ou preparados ao vivo.",
+      "intro": "A estação pode ser apresentada como buffet ou como experiência preparada ao vivo, conforme o formato do evento. Escolha os sabores e o formato que preferir.",
+      "note": "",
+      "select": "many",
+      "maxPicks": 0,
+      "choice": { "label": "Formato", "options": ["Buffet", "Preparado ao vivo", "Quero a sugestão do chef"] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "sabores", "name": "Sabores", "note": "", "active": true,
+          "items": [
+            { "id": "risoto-de-file-mignon", "name": "Risoto de filé mignon", "active": true },
+            { "id": "risoto-de-camarao-com-limao-siciliano", "name": "Risoto de camarão com limão-siciliano", "active": true },
+            { "id": "risoto-de-funghi", "name": "Risoto de funghi", "active": true },
+            { "id": "risoto-caprese", "name": "Risoto caprese", "active": true },
+            { "id": "risoto-de-tomate-seco-com-rucula", "name": "Risoto de tomate seco com rúcula", "active": true },
+            { "id": "risoto-de-alho-poro-e-parmesao", "name": "Risoto de alho-poró e parmesão", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cook-show",
+      "name": "Cook Show",
+      "icon": "flame",
+      "image": "",
+      "short": "Preparo ao vivo pelo chef, com técnica, interação e apresentação.",
+      "intro": "Uma experiência gastronômica com preparo ao vivo pelo chef, valorizando técnica, interação e apresentação. O prato, a duração e a estrutura são definidos de acordo com o evento.",
+      "note": "",
+      "select": "one",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "experiencia", "name": "Experiência", "note": "", "active": true,
+          "items": [
+            { "id": "cook-show-com-o-chef", "name": "Cook Show com o Chef Carlos Junior", "tier": "", "desc": "Um momento de destaque no evento, conduzido pelo chef do início ao fim.", "includes": ["Apresentação do chef e da proposta", "Preparo ao vivo", "Interação com os convidados, quando apropriado", "Finalização e serviço do prato", "Possibilidade de personalização do menu"], "price": null, "priceUnit": "", "availability": "Sob consulta", "image": "", "active": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aumente-sua-experiencia",
+      "name": "Aumente sua Experiência",
+      "icon": "sparkle",
+      "image": "",
+      "short": "Ativações e complementos para surpreender os convidados.",
+      "intro": "Estações, ilhas e serviços especiais que podem ser somados a qualquer formato. Selecione o que combina com o seu evento e nós incluímos na proposta.",
+      "note": "",
+      "select": "many",
+      "maxPicks": 0,
+      "choice": { "label": "", "options": [] },
+      "active": true,
+      "presets": [],
+      "groups": [
+        {
+          "id": "ativacoes", "name": "Ativações e complementos", "note": "", "active": true,
+          "items": [
+            { "id": "estacao-de-risotos", "name": "Estação de risotos", "desc": "Risotos preparados na hora, à vista dos convidados.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "estacao-de-massas", "name": "Estação de massas", "desc": "Massas finalizadas no momento, com molhos à escolha.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "parrilla-e-cortes-ao-fogo", "name": "Parrilla e cortes preparados ao fogo", "desc": "Cortes selecionados preparados na parrilla durante o evento.", "price": null, "priceUnit": "por pessoa", "availability": "Sob consulta", "image": "", "active": true },
+            { "id": "cook-show-ao-vivo", "name": "Cook Show com preparo ao vivo", "desc": "O chef prepara e finaliza um prato diante dos convidados.", "price": null, "priceUnit": "", "availability": "Sob consulta", "image": "", "active": true },
+            { "id": "mesa-de-frios-ampliada", "name": "Mesa de frios ampliada", "desc": "Mais variedade de queijos, embutidos, frutas, pães, geleias e pastas.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "ilha-de-sobremesas", "name": "Ilha de sobremesas", "desc": "Uma mesa dedicada às sobremesas, com apresentação especial.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "bar-de-cafes", "name": "Bar de cafés", "desc": "Cafés especiais servidos durante o evento.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "estacao-de-mini-burgers", "name": "Estação de mini burgers", "desc": "Mini burgers artesanais montados na hora.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "estacao-de-comida-brasileira", "name": "Estação de comida brasileira", "desc": "Sabores brasileiros servidos em porções, com apresentação contemporânea.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "estacao-de-frutos-do-mar", "name": "Estação de frutos do mar", "desc": "Preparações com camarão, polvo e outros frutos do mar.", "price": null, "priceUnit": "por pessoa", "availability": "Sob consulta", "image": "", "active": true },
+            { "id": "ilha-de-saladas", "name": "Ilha de saladas", "desc": "Folhas, legumes e acompanhamentos frescos para montar à vontade.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "servico-volante-de-finger-foods", "name": "Serviço volante de finger foods", "desc": "Garçons servindo finger foods entre os convidados.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "welcome-coffee-personalizado", "name": "Welcome coffee personalizado", "desc": "Recepção dos convidados com café e itens pensados para o seu evento.", "price": null, "priceUnit": "por pessoa", "availability": "", "image": "", "active": true },
+            { "id": "equipe-adicional", "name": "Equipe adicional e serviços complementares", "desc": "Mais profissionais ou serviços conforme a necessidade do evento.", "price": null, "priceUnit": "", "availability": "Sob consulta", "image": "", "active": true }
+          ]
+        }
+      ]
+    }
+  ]
+}
