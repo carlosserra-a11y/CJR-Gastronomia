@@ -3,23 +3,16 @@
    1) anel 3D de fotos (CSS 3D) — gira sozinho, com a rolagem e ao arrastar;
    2) grade com filtros, "carregar mais", colunas em paralaxe e cartões que
       inclinam com o mouse;
-   3) visualizador em tela cheia: setas, teclado, deslizar, tocar nas
-      laterais da foto, arrastar para baixo para fechar, troca automática
-      e "quero algo assim" pelo WhatsApp.
+   3) visualizador em tela cheia (lightbox.js).
    ============================================================ */
 import { $, $$, html, setHTML, imgSrc, finePointer } from "./util.js";
 import { onFrame, motion, scan } from "./motion.js";
-import { openLayer, closeLayer } from "./dialog.js";
-import { ui } from "./icons.js";
+import { openLightbox } from "./lightbox.js";
 import { PORTFOLIO_CATEGORIES } from "../shared/menu.js";
-import { whatsappUrl } from "../shared/quote.js";
 
 const RING_SIZE = 12;
 const DRAG_THRESHOLD = 6; // px: abaixo disso o gesto conta como toque, não como arrasto
-const SWIPE_THRESHOLD = 50;
-const CLOSE_DRAG = 110; // px arrastando a foto para baixo para fechar o visualizador
 const COLUMN_SHIFT = [0, 70, 32]; // deslocamento máximo (px) de cada coluna da grade
-const AUTOPLAY_MS = 4500;
 const TILE_GAP = 16;
 const pageSize = () => (window.innerWidth < 760 ? 8 : 12);
 
@@ -43,146 +36,6 @@ const tile = (p, index, order) => html`
       <figcaption><span class="pf-cat">${PORTFOLIO_CATEGORIES[p.category] || ""}</span><span class="pf-cap">${p.caption}</span></figcaption>
     </button>
   </figure>`;
-
-/* ---------------- Visualizador ---------------- */
-
-function lightbox() {
-  let layer = $("#lightbox");
-  if (!layer) {
-    layer = document.createElement("div");
-    layer.className = "layer lightbox";
-    layer.id = "lightbox";
-    layer.hidden = true;
-    setHTML(layer, html`
-      <div class="layer-backdrop" data-close></div>
-      <div class="lb" role="dialog" aria-modal="true" aria-label="Foto do portfólio">
-        <div class="lb-bar" aria-hidden="true"><i></i></div>
-        <button type="button" class="lb-btn lb-play" data-lb-play aria-label="Passar as fotos sozinho" aria-pressed="false">▶</button>
-        <button type="button" class="lb-btn lb-close" data-close aria-label="Fechar">${ui.close}</button>
-        <button type="button" class="lb-btn lb-prev" data-lb="-1" aria-label="Foto anterior">${ui.back}</button>
-        <figure class="lb-figure"><img class="lb-img" alt="" draggable="false">
-          <figcaption class="lb-cap"><span class="lb-count"></span><span class="lb-text"></span>
-            <a class="lb-cta" target="_blank" rel="noopener" hidden>${ui.whats}<span>Quero algo assim</span></a>
-            <span class="lb-hint">Toque nas laterais da foto para trocar · arraste para baixo para fechar</span>
-          </figcaption></figure>
-        <button type="button" class="lb-btn lb-next" data-lb="1" aria-label="Próxima foto">${ui.arrow}</button>
-      </div>`);
-    document.body.appendChild(layer);
-  }
-  return layer;
-}
-
-function openLightbox(items, list, start, { whatsapp } = {}) {
-  const layer = lightbox();
-  const box = $(".lb", layer);
-  const img = $(".lb-img", layer);
-  const text = $(".lb-text", layer);
-  const cta = $(".lb-cta", layer);
-  const bar = $(".lb-bar i", layer);
-  const play = $("[data-lb-play]", layer);
-  let pos = Math.max(0, list.indexOf(start));
-  let playing = false, elapsed = 0, lastT = 0, raf = 0;
-
-  const show = (dir = 0) => {
-    const p = items[list[pos]];
-    img.classList.remove("is-in");
-    img.style.setProperty("--from", `${dir * 40}px`);
-    img.onload = () => requestAnimationFrame(() => img.classList.add("is-in"));
-    img.onerror = () => { img.classList.add("is-in"); text.textContent = "Não foi possível carregar esta foto."; };
-    img.src = imgSrc(p.image);
-    img.alt = p.caption || "Foto do portfólio";
-    $(".lb-count", layer).textContent = `${pos + 1} / ${list.length}`;
-    text.textContent = p.caption || "";
-    const category = PORTFOLIO_CATEGORIES[p.category] || "portfólio";
-    const wa = whatsappUrl(whatsapp, `Olá, Chef Carlos! Vi no portfólio do site a foto "${p.caption || category}" (${category}) e quero algo assim no meu evento.`);
-    cta.hidden = !wa;
-    if (wa) cta.href = wa;
-    elapsed = 0;
-    [list[pos + 1], list[pos - 1]].forEach((n) => { if (n !== undefined) new Image().src = imgSrc(items[n].image); });
-  };
-  const go = (d) => { pos = (pos + d + list.length) % list.length; show(d); };
-
-  // troca automática com barra de tempo
-  const tick = (t) => {
-    if (!playing) return;
-    elapsed += Math.min(100, t - lastT); lastT = t;
-    bar.style.transform = `scaleX(${Math.min(1, elapsed / AUTOPLAY_MS).toFixed(3)})`;
-    if (elapsed >= AUTOPLAY_MS) go(1);
-    raf = requestAnimationFrame(tick);
-  };
-  const setPlaying = (on) => {
-    playing = on && list.length > 1;
-    play.setAttribute("aria-pressed", String(playing));
-    play.setAttribute("aria-label", playing ? "Pausar a troca automática" : "Passar as fotos sozinho");
-    play.textContent = playing ? "❚❚" : "▶";
-    cancelAnimationFrame(raf);
-    if (playing) { lastT = performance.now(); raf = requestAnimationFrame(tick); } else bar.style.transform = "scaleX(0)";
-  };
-
-  const onKey = (e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); };
-  let sx = null, sy = 0, dy = 0, swiped = false;
-  const onClick = (e) => {
-    if (swiped) { swiped = false; return; } // o gesto já trocou a foto ou fechou
-    if (e.target.closest("[data-lb-play]")) { setPlaying(!playing); return; }
-    const b = e.target.closest("[data-lb]");
-    if (b) { go(Number(b.dataset.lb)); return; }
-    if (e.target === img) { // tocar nas laterais da foto troca; no meio, não faz nada
-      const r = img.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width;
-      if (x < 0.35) go(-1); else if (x > 0.65) go(1);
-      return;
-    }
-    // a área escura em volta da foto cobre o fundo: clicar nela também fecha
-    if (e.target === box || e.target.classList.contains("lb-figure")) closeLayer(layer);
-  };
-  const down = (e) => {
-    if (!e.isPrimary) return;
-    swiped = false; // um gesto novo começa sem a marca do anterior
-    sx = e.clientX; sy = e.clientY; dy = 0;
-    // mexeu na foto: para a troca automática (o próprio botão de pausa decide no clique)
-    if (playing && !e.target.closest("[data-lb-play]")) setPlaying(false);
-  };
-  const move = (e) => {
-    if (sx === null || !e.isPrimary || e.target !== img) return;
-    const ddx = e.clientX - sx, ddy = e.clientY - sy;
-    if (Math.abs(ddy) > Math.abs(ddx)) { // arrastando para baixo: a foto acompanha o dedo (e volta se o dedo subir)
-      dy = Math.max(0, ddy);
-      img.classList.add("is-dragging");
-      img.style.translate = `0 ${dy}px`;
-      img.style.opacity = String(Math.max(0.35, 1 - dy / 400));
-    }
-  };
-  const up = (e) => {
-    if (sx === null || !e.isPrimary) return;
-    const dx = e.clientX - sx;
-    img.classList.remove("is-dragging");
-    img.style.translate = ""; img.style.opacity = "";
-    if (dy > CLOSE_DRAG) { swiped = true; closeLayer(layer); }
-    else if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > dy) { go(dx < 0 ? 1 : -1); swiped = true; }
-    sx = null; dy = 0;
-  };
-  const cancel = (e) => { if (!e.isPrimary) return; sx = null; dy = 0; img.classList.remove("is-dragging"); img.style.translate = ""; img.style.opacity = ""; };
-  document.addEventListener("keydown", onKey);
-  layer.addEventListener("click", onClick);
-  layer.addEventListener("pointerdown", down);
-  layer.addEventListener("pointermove", move);
-  layer.addEventListener("pointerup", up);
-  layer.addEventListener("pointercancel", cancel);
-  show();
-  setPlaying(false);
-  openLayer(layer, {
-    initialFocus: ".lb-next",
-    onClose: () => {
-      setPlaying(false);
-      document.removeEventListener("keydown", onKey);
-      layer.removeEventListener("click", onClick);
-      layer.removeEventListener("pointerdown", down);
-      layer.removeEventListener("pointermove", move);
-      layer.removeEventListener("pointerup", up);
-      layer.removeEventListener("pointercancel", cancel);
-    },
-  });
-}
 
 /* ---------------- Anel 3D ---------------- */
 
