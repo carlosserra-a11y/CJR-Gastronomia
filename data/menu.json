@@ -627,7 +627,68 @@
       "Dedicação da equipe",
       "Pontualidade"
     ],
-    "reviews": []
+    "reviews": [
+      {
+        "name": "Fernanda K.",
+        "rating": 5,
+        "event": "Buffet",
+        "text": "Estou sem palavras para descrever o quanto ficamos satisfeitos com o trabalho desta equipe maravilhosa. Todos os convidados vieram nos perguntar quem tinha feito o buffet porque todos adoraram. Indicamos de olhos fechados!"
+      },
+      {
+        "name": "Joane S.",
+        "rating": 5,
+        "event": "Almoço de aniversário",
+        "text": "Comida maravilhosa! Eles preparam um almoço para meu aniversário, só ouvi elogios pelos convidados! Indico de olhos fechados! Capricho e um ótimo atendimento. Super indico!"
+      },
+      {
+        "name": "Janypher S.",
+        "rating": 5,
+        "event": "Coffee break",
+        "text": "Já tive a oportunidade de contratar o Chef Carlos em mais de um evento e posso afirmar que o trabalho dele é excelente. Os convidados sempre elogiam o coffee break, tanto pelo sabor quanto pela apresentação."
+      },
+      {
+        "name": "Gustavo S.",
+        "rating": 5,
+        "event": "Eventos institucionais",
+        "text": "O Chef Carlos já foi meu fornecedor em inúmeros eventos, institucionais, pela minha empresa e pela Associação. Sempre incrível. Excepcional em coffee breaks."
+      },
+      {
+        "name": "Bruna N.",
+        "rating": 5,
+        "event": "Ceias, cafés e almoços",
+        "text": "Já tive a oportunidade de experimentar desde ceias de Natal até cafés e almoços, e tudo sempre foi impecável: sabor, apresentação, organização e cuidado em cada detalhe."
+      },
+      {
+        "name": "Dioni D.",
+        "rating": 5,
+        "event": "",
+        "text": "O Carlos é um profissional maravilhoso. Muito atencioso e surpreende em cada detalhe. Além disso, possui um cardápio maravilhoso. Super recomendo."
+      },
+      {
+        "name": "Paulo B.",
+        "rating": 5,
+        "event": "Coffee break e buffet corporativo",
+        "text": "Experiência única… todos os itens com seu sabor sensacional. A beleza entre os pratos e a organização de todos os detalhes fazem desse Chef Carlos uma estrela da culinária brasileira."
+      },
+      {
+        "name": "Felipe M.",
+        "rating": 5,
+        "event": "Coffees e buffets",
+        "text": "Chef Carlos é excelente! Os coffees e buffets preparados por ele e sua equipe são verdadeiras experiências gastronômicas. Recomendo!"
+      },
+      {
+        "name": "Thalita R.",
+        "rating": 5,
+        "event": "",
+        "text": "Adorei! Chamaria de novo. Qualidade, pontuais e um capricho de ouro em cada detalhe."
+      },
+      {
+        "name": "Helena M.",
+        "rating": 5,
+        "event": "",
+        "text": "Excelente profissional, entrega muito mais do que um evento: ele tem muito amor e dedicação em cada evento. Parabéns pelo seu trabalho!"
+      }
+    ]
   },
   "categories": [
     {

@@ -4,7 +4,10 @@
    em código, sem arquivos externos.
    - mouse: a cena inclina e cada peça se desloca pela profundidade
    - rolagem: as peças se afastam e giram
-   - clique: as peças "pulam"
+   - pegar: arrasta qualquer peça; ao soltar, ela é arremessada com a
+     velocidade do gesto, quica nas bordas e volta devagar ao lugar
+   - toque rápido numa peça: ela salta e gira; em área vazia, todas pulam
+   - os grãos de pimenta e sal fogem do dedo/mouse
    Empacotado em js/site/kitchen3d.js (npm run build:3d).
    O laço de animação é o do site (motion.js): ele chama render().
    ============================================================ */
@@ -13,6 +16,7 @@ import {
   MeshStandardMaterial, MeshPhysicalMaterial, Shape, ExtrudeGeometry, ShapeGeometry, SphereGeometry,
   CylinderGeometry, IcosahedronGeometry, BoxGeometry, CapsuleGeometry, CanvasTexture,
   DirectionalLight, AmbientLight, PMREMGenerator, ACESFilmicToneMapping, SRGBColorSpace, DoubleSide, MathUtils,
+  Raycaster, Vector2, Vector3, Plane,
 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
@@ -229,7 +233,10 @@ export function mountKitchen(canvas, { mobile = false } = {}) {
     obj.scale.setScalar(def.s * (mobile ? MOBILE_SCALE : 1));
     obj.rotation.set(...def.rot);
     world.add(obj);
-    return { obj, def, phase: i * 1.37, vel: 0, base: { rx: def.rot[0], ry: def.rot[1], rz: def.rot[2] }, kick: 0 };
+    return {
+      obj, def, phase: i * 1.37, vel: 0, base: { rx: def.rot[0], ry: def.rot[1], rz: def.rot[2] }, kick: 0,
+      home: { x: 0, y: 0 }, off: { x: 0, y: 0 }, v: { x: 0, y: 0 }, spin: { x: 0, y: 0 }, turn: { x: 0, y: 0 }, held: false,
+    };
   });
 
   // Temperos miúdos espalhados por toda a área (pimenta e sal), em várias profundidades
@@ -241,7 +248,7 @@ export function mountKitchen(canvas, { mobile = false } = {}) {
     mesh.rotation.set(rand() * 6, rand() * 6, rand() * 6);
     if (mobile) mesh.scale.setScalar(MOBILE_SCALE);
     world.add(mesh);
-    grains.push({ obj: mesh, ...grainSpot(mobile), z: between(-2.5, 3), phase: rand() * 6, spin: between(-0.6, 0.6) });
+    grains.push({ obj: mesh, ...grainSpot(mobile), z: between(-2.5, 3), phase: rand() * 6, spin: between(-0.6, 0.6), off: { x: 0, y: 0 }, v: { x: 0, y: 0 } });
   }
 
   let halfW = 1, halfH = 1;
@@ -256,6 +263,97 @@ export function mountKitchen(canvas, { mobile = false } = {}) {
   let impulse = 0;
   const jump = () => { impulse = 1; for (const it of items) it.vel += between(1.5, 3) * (rand() > 0.5 ? 1 : -1); };
 
+  /* ---------- brincar: pegar, arrastar, arremessar ---------- */
+  const SPRING = 2.2; // força que puxa a peça de volta ao lugar
+  const THROW_MAX = 24; // velocidade máxima de arremesso (unidades da cena por segundo)
+  const ray = new Raycaster(), ndc = new Vector2(), hitPoint = new Vector3(), plane = new Plane(), normal = new Vector3(0, 0, 1), onPlane = new Vector3();
+  const pointer = { x: 0, y: 0, on: false };
+  let drag = null;
+  const clampV = (v, max) => Math.max(-max, Math.min(max, v));
+
+  // ponto da tela → posição na cena (no plano de profundidade z, já considerando a inclinação da cena)
+  function localAt(nx, ny, z) {
+    ndc.set(nx, ny);
+    ray.setFromCamera(ndc, camera);
+    world.updateMatrixWorld();
+    plane.setFromNormalAndCoplanarPoint(normal, onPlane.set(0, 0, z)).applyMatrix4(world.matrixWorld);
+    if (!ray.ray.intersectPlane(plane, hitPoint)) return null;
+    return world.worldToLocal(hitPoint.clone());
+  }
+  function pick(nx, ny) {
+    ndc.set(nx, ny);
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObjects(items.map((i) => i.obj), true);
+    if (!hits.length) return null;
+    let o = hits[0].object;
+    while (o && !items.some((i) => i.obj === o)) o = o.parent;
+    return items.find((i) => i.obj === o) || null;
+  }
+  // mola de volta ao lugar + atrito + quique nas bordas da área visível (na profundidade da peça)
+  function physics(body, step, z) {
+    body.v.x -= body.off.x * SPRING * step;
+    body.v.y -= body.off.y * SPRING * step;
+    const damp = Math.pow(0.35, step);
+    body.v.x *= damp; body.v.y *= damp;
+    body.off.x += body.v.x * step;
+    body.off.y += body.v.y * step;
+    const depth = (camera.position.z - z) / camera.position.z;
+    // peças que já moram na borda (meio cortadas, de propósito) não são empurradas para dentro
+    const limX = Math.max(halfW * depth * 1.02, Math.abs(body.home.x)), limY = Math.max(halfH * depth * 1.02, Math.abs(body.home.y));
+    const px = body.home.x + body.off.x, py = body.home.y + body.off.y;
+    if (Math.abs(px) > limX && Math.sign(body.v.x) === Math.sign(px)) { body.off.x = Math.sign(px) * limX - body.home.x; body.v.x *= -0.6; body.spin.y += body.v.y * 0.6; }
+    if (Math.abs(py) > limY && Math.sign(body.v.y) === Math.sign(py)) { body.off.y = Math.sign(py) * limY - body.home.y; body.v.y *= -0.6; body.spin.x += body.v.x * 0.6; }
+  }
+  /** Começa a segurar a peça sob o ponto (coordenadas -1…1). Devolve false se não havia peça ali. */
+  function pointerDown(nx, ny, t) {
+    const it = pick(nx, ny);
+    const p = it && localAt(nx, ny, it.def.z);
+    if (!p) return false;
+    it.held = true;
+    it.v.x = 0; it.v.y = 0;
+    drag = { it, gx: it.home.x + it.off.x - p.x, gy: it.home.y + it.off.y - p.y, lx: p.x, ly: p.y, lt: t, vx: 0, vy: 0, dist: 0 };
+    return true;
+  }
+  /** Move o ponteiro: arrasta a peça segurada e espanta os grãos. Devolve true se há uma peça sob o ponteiro. */
+  function pointerMove(nx, ny, t) {
+    const ground = localAt(nx, ny, 0);
+    if (ground) { pointer.x = ground.x; pointer.y = ground.y; pointer.on = true; }
+    if (!drag) return Boolean(pick(nx, ny));
+    const p = localAt(nx, ny, drag.it.def.z);
+    if (!p) return true;
+    const dtS = Math.max(0.008, (t - drag.lt) / 1000);
+    const vx = (p.x - drag.lx) / dtS, vy = (p.y - drag.ly) / dtS;
+    drag.vx = drag.vx * 0.5 + vx * 0.5;
+    drag.vy = drag.vy * 0.5 + vy * 0.5;
+    drag.dist += Math.hypot(p.x - drag.lx, p.y - drag.ly);
+    drag.lx = p.x; drag.ly = p.y; drag.lt = t;
+    const it = drag.it;
+    it.off.x = p.x + drag.gx - it.home.x;
+    it.off.y = p.y + drag.gy - it.home.y;
+    it.spin.y += vx * 0.015; it.spin.x -= vy * 0.015; // balança na mão
+    return true;
+  }
+  /** Solta: arremessa com a velocidade do gesto; um toque sem arrastar faz a peça saltar e girar. */
+  function pointerUp() {
+    if (!drag) return false;
+    const { it } = drag;
+    it.held = false;
+    if (drag.dist < 0.08) {
+      it.v.y += 6;
+      it.v.x += between(-2, 2);
+      it.spin.y += between(8, 14) * (rand() > 0.5 ? 1 : -1);
+      it.spin.x += between(-4, 4);
+    } else {
+      it.v.x = clampV(drag.vx, THROW_MAX);
+      it.v.y = clampV(drag.vy, THROW_MAX);
+      it.spin.y += it.v.x * 0.8;
+      it.spin.x -= it.v.y * 0.8;
+    }
+    drag = null;
+    return true;
+  }
+  const pointerLeave = () => { pointer.on = false; };
+
   let rx = 0, ry = 0;
   function render({ time, mx = 0.5, my = 0.5, scroll = 0, dt = 16 }) {
     const k = 1 - Math.pow(0.9, dt / 16);
@@ -265,31 +363,45 @@ export function mountKitchen(canvas, { mobile = false } = {}) {
     impulse *= Math.pow(0.92, dt / 16);
     const spread = Math.min(1.4, Math.max(0, scroll));
 
+    const step = Math.min(0.05, dt / 1000);
     for (const it of items) {
       const { def, obj } = it;
       const [fx, fy] = mobile ? def.m : [def.fx, def.fy];
-      const bob = Math.sin(time * 0.8 + it.phase) * 0.12;
+      const bob = it.held ? 0 : Math.sin(time * 0.8 + it.phase) * 0.12;
       const dirX = Math.sign(fx - 0.45) || 1, dirY = Math.sign(fy) || 1;
-      obj.position.set(
-        fx * halfW + dirX * spread * 2.2 + (mx - 0.5) * def.z * 0.25,
-        fy * halfH + bob + dirY * spread * 1.6 + impulse * 0.5 * Math.sin(it.phase) - (my - 0.5) * def.z * 0.15,
-        def.z,
-      );
+      it.home.x = fx * halfW + dirX * spread * 2.2 + (mx - 0.5) * def.z * 0.25;
+      it.home.y = fy * halfH + bob + dirY * spread * 1.6 + impulse * 0.5 * Math.sin(it.phase) - (my - 0.5) * def.z * 0.15;
+      if (!it.held) physics(it, step, def.z);
+      obj.position.set(it.home.x + it.off.x, it.home.y + it.off.y, def.z);
       it.vel *= Math.pow(0.94, dt / 16);
       it.kick += it.vel * (dt / 1000);
+      it.turn.x += it.spin.x * step;
+      it.turn.y += it.spin.y * step;
+      const spinDamp = Math.pow(0.4, step);
+      it.spin.x *= spinDamp; it.spin.y *= spinDamp;
       obj.rotation.set(
-        it.base.rx + Math.sin(time * 0.5 + it.phase) * 0.12 + spread * def.spin * 3,
-        it.base.ry + time * def.spin * 0.25 + it.kick,
+        it.base.rx + Math.sin(time * 0.5 + it.phase) * 0.12 + spread * def.spin * 3 + it.turn.x,
+        it.base.ry + time * def.spin * 0.25 + it.kick + it.turn.y,
         it.base.rz + Math.cos(time * 0.4 + it.phase) * 0.08 + spread * def.spin * 2,
       );
     }
     for (const g of grains) {
-      g.obj.position.set(
-        g.fx * halfW + (mx - 0.5) * g.z * 0.3,
-        g.fy * halfH + Math.sin(time * 0.6 + g.phase) * 0.08 + spread * (g.fy > 0 ? 1.4 : -1.4) + impulse * 0.35,
-        g.z,
-      );
-      g.obj.rotation.x += g.spin * (dt / 1000) * (1 + impulse * 6);
+      const hx = g.fx * halfW + (mx - 0.5) * g.z * 0.3;
+      const hy = g.fy * halfH + Math.sin(time * 0.6 + g.phase) * 0.08 + spread * (g.fy > 0 ? 1.4 : -1.4) + impulse * 0.35;
+      if (pointer.on) { // o dedo/mouse espanta os grãos
+        const dx = hx + g.off.x - pointer.x, dy = hy + g.off.y - pointer.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d < 1.4) { const f = (1.4 - d) * 26 * step; g.v.x += (dx / d) * f; g.v.y += (dy / d) * f; }
+      }
+      g.v.x -= g.off.x * 3 * step;
+      g.v.y -= g.off.y * 3 * step;
+      const damp = Math.pow(0.2, step);
+      g.v.x *= damp; g.v.y *= damp;
+      g.off.x += g.v.x * step;
+      g.off.y += g.v.y * step;
+      g.obj.position.set(hx + g.off.x, hy + g.off.y, g.z);
+      const speed = Math.hypot(g.v.x, g.v.y);
+      g.obj.rotation.x += g.spin * (dt / 1000) * (1 + impulse * 6 + speed * 3);
       g.obj.rotation.y += g.spin * 0.7 * (dt / 1000);
     }
     renderer.render(scene, camera);
@@ -310,5 +422,5 @@ export function mountKitchen(canvas, { mobile = false } = {}) {
     renderer.forceContextLoss();
   }
 
-  return { render, resize, jump, destroy };
+  return { render, resize, jump, destroy, pointerDown, pointerMove, pointerUp, pointerLeave };
 }

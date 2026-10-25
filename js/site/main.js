@@ -3,7 +3,7 @@
    (#/servicos/…, #/orcamento…), das transições e dos efeitos
    ligados à rolagem da página inicial.
    ============================================================ */
-import { $, $$, setHTML, toast } from "./util.js";
+import { $, $$, setHTML, toast, finePointer } from "./util.js";
 import { initMotion, onFrame, motion, scan, scrollTo, measure } from "./motion.js";
 import { initCursor } from "./cursor.js";
 import { mountPortfolio } from "./portfolio.js";
@@ -190,15 +190,72 @@ function mountHero3D() {
     if (!scene) return;
     const size = () => { const r = hero.getBoundingClientRect(); scene.resize(r.width, r.height); };
     size();
-    const jump = (e) => { if (!e.target.closest("a, button")) scene.jump(); };
     window.addEventListener("resize", size);
-    hero.addEventListener("pointerdown", jump);
+    // brincar com os ingredientes: pegar, arrastar, arremessar; tocar numa peça a faz saltar
+    const root = document.documentElement;
+    const ndcOf = (e) => { const r = canvas.getBoundingClientRect(); return [((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1]; };
+    const onControl = (e) => e.target.closest("a, button, input, label, select, textarea");
+    const hint = document.createElement("p");
+    hint.className = "hero-play-hint";
+    hint.textContent = finePointer() ? "Pegue e jogue os ingredientes" : "Toque e arraste os ingredientes";
+    hero.appendChild(hint);
+    let grabbing = false;
+    let overPiece = false;
+    // o cursor dourado cresce sobre uma peça; ao sair dela volta ao estado do elemento embaixo
+    const setOverPiece = (over, target) => {
+      if (over === overPiece) return;
+      overPiece = over;
+      hero.classList.toggle("is-grab-hover", over);
+      root.classList.toggle("cursor-hover", over || Boolean(target?.closest?.("[data-cursor], a, button, label, select, input, textarea")));
+    };
+    const onDown = (e) => {
+      if (!e.isPrimary || e.button > 0 || onControl(e)) return;
+      const [nx, ny] = ndcOf(e);
+      if (!scene.pointerDown(nx, ny, performance.now())) { scene.jump(); return; }
+      grabbing = true;
+      hero.classList.add("is-grabbing");
+      try { hero.setPointerCapture(e.pointerId); } catch { /* ponteiro já solto: segue sem captura */ }
+      hint.classList.add("is-gone");
+    };
+    const onMove = (e) => {
+      if (!e.isPrimary) return;
+      const [nx, ny] = ndcOf(e);
+      const over = scene.pointerMove(nx, ny, performance.now()) && !onControl(e);
+      if (e.pointerType === "mouse") setOverPiece(over && !grabbing, e.target);
+    };
+    const onUp = (e) => {
+      if (!grabbing || !e.isPrimary) return;
+      grabbing = false;
+      hero.classList.remove("is-grabbing");
+      scene.pointerUp();
+    };
+    const onLeave = (e) => { scene.pointerLeave(); setOverPiece(false, e.relatedTarget); };
+    const onTouch = (e) => { if (grabbing) e.preventDefault(); }; // segurando uma peça, a página não rola
+    hero.addEventListener("pointerdown", onDown);
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerup", onUp);
+    hero.addEventListener("pointercancel", onUp);
+    hero.addEventListener("pointerleave", onLeave);
+    hero.addEventListener("touchstart", onTouch, { passive: false });
+    hero.addEventListener("touchmove", onTouch, { passive: false });
     canvas.classList.add("is-on");
     const off = onFrame((m) => {
       if (m.y > m.vh * 1.1) return; // fora da tela: não desenha
       scene.render({ time: m.time, mx: m.mouse.sx, my: m.mouse.sy, scroll: m.y / m.vh, dt: m.dt });
     });
-    stop = () => { off(); window.removeEventListener("resize", size); hero.removeEventListener("pointerdown", jump); scene.destroy(); };
+    stop = () => {
+      off();
+      window.removeEventListener("resize", size);
+      hero.removeEventListener("pointerdown", onDown);
+      hero.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerup", onUp);
+      hero.removeEventListener("pointercancel", onUp);
+      hero.removeEventListener("pointerleave", onLeave);
+      hero.removeEventListener("touchstart", onTouch);
+      hero.removeEventListener("touchmove", onTouch);
+      hint.remove();
+      scene.destroy();
+    };
   }).catch(() => { /* sem WebGL: o topo continua com a foto */ });
   return () => { dead = true; stop(); };
 }

@@ -99,8 +99,8 @@ html.js .rating-card.is-in .stars i.is-on { opacity: 1; transform: none; }
 .review-carousel { display: grid; gap: 14px; min-width: 0; }
 .review-track { display: grid; grid-auto-flow: column; grid-auto-columns: 86%; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 2px 8px; overscroll-behavior-x: contain; }
 .review-track::-webkit-scrollbar { display: none; }
-.review-card { scroll-snap-align: start; margin: 0; display: grid; gap: 14px; align-content: start; padding: 22px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-sm); }
-.review-text { margin: 0; font-family: var(--f-display); font-size: 1.3rem; line-height: 1.35; color: var(--ink); }
+.review-card { scroll-snap-align: start; margin: 0; display: grid; grid-template-rows: auto 1fr auto; gap: 14px; padding: 22px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-sm); }
+.review-text { margin: 0; font-family: var(--f-display); font-size: clamp(1.12rem, 0.95rem + 0.6vw, 1.3rem); line-height: 1.35; color: var(--ink); }
 .review-who { display: flex; align-items: center; gap: 12px; margin-top: auto; }
 .review-who strong { display: block; font-size: 14px; }
 .review-who small { font-size: 12px; color: var(--ink-3); }
@@ -217,3 +217,18 @@ html.layer-open .wa-float { opacity: 0; pointer-events: none; }
   .calc-opt { grid-template-columns: auto minmax(0, 1fr); }
   .calc-opt-price { grid-column: 2; text-align: left; display: flex; gap: 6px; }
 }
+
+/* ---------- Topo: brincar com os ingredientes 3D ---------- */
+.hero.is-grab-hover { cursor: grab; }
+.hero.is-grabbing { cursor: grabbing; user-select: none; }
+.hero-play-hint {
+  position: absolute; left: 50%; bottom: 30px; z-index: 3; margin: 0; display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-sm); font-size: 12.5px; font-weight: 800; color: var(--ink-2); white-space: nowrap; pointer-events: none;
+  translate: -50% 0; animation: hintIn 0.8s var(--ease) 2.5s both, hintBob 2.4s ease-in-out 3.3s infinite; transition: opacity 0.5s, translate 0.5s;
+}
+.hero-play-hint::before { content: "✋"; font-size: 15px; }
+.hero-play-hint.is-gone { opacity: 0; translate: -50% 10px; animation: none; }
+@keyframes hintIn { from { opacity: 0; translate: -50% 12px; } }
+@keyframes hintBob { 50% { transform: translateY(-4px); } }
+@media (max-width: 900px) { .hero-play-hint { bottom: 18px; } }
