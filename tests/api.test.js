@@ -256,3 +256,37 @@ test("senhas novas precisam de 10 caracteres e não podem ser comuns", async () 
   assert.ok(passwordProblems("chefcarlos123").some((p) => p.includes("comum")));
   assert.deepEqual(passwordProblems("Cozinha-do-Chef-2026"), []);
 });
+
+test("estatísticas: o site registra ações anônimas e o painel mostra o relatório", async () => {
+  const s = "visitateste123";
+  const send = (e, headers = {}) => fetch(base + "/api/track", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8", ...headers }, body: JSON.stringify({ s, e }) });
+  const ok = await send([
+    { type: "visit", data: { src: "instagram", dev: "mobile", lp: "inicio" } },
+    { type: "dish", data: { c: "coffee-corporativo", i: "coffee-break-basic" } },
+    { type: "lead", data: { src: "orcamento", et: "Corporativo", g: 80, m: "2026-12", items: [["coffee-corporativo", "coffee-break-basic"]], name: "Fulano", phone: "48999999999" } },
+    { type: "inventado", data: { x: 1 } },
+  ]);
+  assert.equal(ok.status, 204);
+  // de outro site ou de robô: aceita sem gravar
+  assert.equal((await send([{ type: "visit", data: {} }], { "Sec-Fetch-Site": "cross-site" })).status, 204);
+  assert.equal((await send([{ type: "visit", data: {} }], { "User-Agent": "Googlebot/2.1" })).status, 204);
+  const bad = await fetch(base + "/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: "x", e: [] }) });
+  assert.equal(bad.status, 400);
+
+  const rows = ctx.db.eventsSince("2000-01-01");
+  assert.deepEqual(rows.map((r) => r.type), ["visit", "dish", "lead"], "evento desconhecido, de outro site ou de robô não entra");
+  assert.ok(!JSON.stringify(rows).includes("Fulano") && !JSON.stringify(rows).includes("4899"), "nome e telefone nunca são gravados");
+
+  cookie = "";
+  assert.equal((await call("GET", "/api/admin/stats")).status, 401, "relatório só com login");
+  await call("POST", "/api/admin/login", { username: "chef", password: "Cozinha2026" });
+  const r = await call("GET", "/api/admin/stats?days=7");
+  assert.equal(r.status, 200);
+  assert.equal(r.data.days, 7);
+  assert.equal(r.data.totals.visits, 1);
+  assert.equal(r.data.totals.leads, 1);
+  assert.equal(r.data.dishes[0].name, "Coffee Break Basic");
+  assert.equal(r.data.dishes[0].leads, 1);
+  assert.equal(r.data.sources[0].id, "instagram");
+  assert.equal(r.data.recentLeads[0].et, "Corporativo");
+});

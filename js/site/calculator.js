@@ -7,6 +7,7 @@
 import { $, $$, html, setHTML, splitWords, storage as local } from "./util.js";
 import { ui } from "./icons.js";
 import { motion } from "./motion.js";
+import { track } from "./track.js";
 import { whatsappUrl } from "../shared/quote.js";
 import { CALC_PROFILES, estimate, estimateMessage, brl, weightLabel, clampGuests } from "../shared/calculator.js";
 
@@ -15,6 +16,7 @@ const RANGE_MAX = 400;
 const DEFAULT_GUESTS = 50;
 const STORE_KEY = "cjr:calc";
 const COUNT_MS = 450;
+const TRACK_MS = 2500; // registra a simulação quando a pessoa para de mexer
 
 const perGuestLabel = (o) => `${weightLabel(o.grams)} por pessoa${o.pieces ? ` · ${o.pieces} ${o.piecesLabel || "unidades"}` : ""}`;
 
@@ -69,7 +71,7 @@ export function calculatorSection(c) {
   </section>`;
 }
 
-function resultView(est, { wa, note }) {
+function resultView(est, { wa, note, lead }) {
   if (!est.lines.length) {
     return html`
       <p class="calc-total-label">Sua estimativa</p>
@@ -91,7 +93,7 @@ function resultView(est, { wa, note }) {
     </ul>
     ${est.combo ? html`<p class="calc-combo">Com mais de um salgado, cada porção fica 20% menor: ninguém come tudo de tudo.</p>` : ""}
     <div class="calc-actions">
-      ${wa ? html`<a class="btn btn-gold" href="${wa}" target="_blank" rel="noopener">${ui.whats}<span>Enviar simulação</span></a>` : ""}
+      ${wa ? html`<a class="btn btn-gold" href="${wa}" target="_blank" rel="noopener" data-lead="calculadora" data-lead-info="${lead}">${ui.whats}<span>Enviar simulação</span></a>` : ""}
       <a class="btn btn-ghost" href="#/orcamento"><span>Pedir orçamento</span></a>
     </div>
     <p class="fine">${note}</p>`;
@@ -106,7 +108,7 @@ export function mountCalculator(root, menu) {
   const live = $(".calc-live", form);
   const status = $("#calcStatus", root);
   let shown = { min: 0, max: 0 }; // valores na tela agora (a contagem parte deles)
-  let raf = 0, statusTimer = 0;
+  let raf = 0, statusTimer = 0, trackTimer = 0;
 
   // última simulação do visitante (só neste aparelho)
   const saved = local.get(STORE_KEY, null);
@@ -152,12 +154,14 @@ export function mountCalculator(root, menu) {
     $$(".calc-opt", form).forEach((l) => l.classList.toggle("is-on", $("input", l).checked));
     const est = estimate(state, options);
     const wa = whatsappUrl(menu.settings.whatsapp, estimateMessage(est));
-    setHTML(out, resultView(est, { wa, note: menu.content.calcNote }));
+    setHTML(out, resultView(est, { wa, note: menu.content.calcNote, lead: JSON.stringify({ g: state.guests, o: state.selected }) }));
     countTo(est);
     // resumo fixo no celular enquanto se escolhe (leva até o resultado)
     live.textContent = est.lines.length ? `${brl(est.min)} – ${brl(est.max)}  ↓` : "Escolha o que servir ↓";
     live.classList.toggle("is-empty", !est.lines.length);
     local.set(STORE_KEY, state);
+    clearTimeout(trackTimer);
+    if (source !== "init" && est.lines.length) trackTimer = setTimeout(() => track("calc", { g: state.guests, p: state.profile, o: state.selected }), TRACK_MS);
     // leitores de tela: um resumo curto quando a pessoa para de mexer (e não a cada movimento do controle)
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => {
@@ -185,5 +189,5 @@ export function mountCalculator(root, menu) {
   form.addEventListener("click", onClick);
   form.addEventListener("submit", onSubmit);
   update("init");
-  return () => { cancelAnimationFrame(raf); clearTimeout(statusTimer); };
+  return () => { cancelAnimationFrame(raf); clearTimeout(statusTimer); clearTimeout(trackTimer); };
 }

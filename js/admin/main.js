@@ -6,8 +6,9 @@ import { html, $, $$, setHTML, api, toast, S, onState, loadMenu, saveMenu, disca
 import { categoriesView, categoryEditor } from "./menu-editor.js";
 import { textsView, settingsView } from "./content.js";
 import { overviewView, historyView, accountView } from "./pages.js";
+import { statsView } from "./stats.js";
 
-const TITLES = { inicio: "Visão geral", cardapio: "Cardápio", textos: "Textos do site", contato: "Contato e configurações", historico: "Histórico", conta: "Conta e equipe" };
+const TITLES = { inicio: "Visão geral", estatisticas: "Estatísticas do site", cardapio: "Cardápio", textos: "Textos do site", contato: "Contato e configurações", historico: "Histórico", conta: "Conta e equipe" };
 let me = null;
 let lastHash = "";
 
@@ -78,6 +79,7 @@ async function route() {
   const target = document.createElement("div");
   try {
     if (key === "inicio") await overviewView(target);
+    if (key === "estatisticas") await statsView(target);
     if (key === "cardapio") (arg ? categoryEditor(target, decodeURIComponent(arg)) : categoriesView(target));
     if (key === "textos") textsView(target);
     if (key === "contato") settingsView(target);

@@ -45,6 +45,7 @@ export async function overviewView(view) {
     <section class="panel">
       <h3>Atalhos</h3>
       <div class="shortcuts">
+        <a class="shortcut" href="#estatisticas"><strong>Estatísticas</strong><span>Visitas, pedidos e pratos mais procurados</span></a>
         <a class="shortcut" href="#cardapio"><strong>Editar cardápio</strong><span>Categorias, pacotes, itens, preços e fotos</span></a>
         <a class="shortcut" href="#textos"><strong>Textos do site</strong><span>Topo, chef, como funciona, galeria</span></a>
         <a class="shortcut" href="#historico"><strong>Histórico</strong><span>Quem mudou o quê — e desfazer</span></a>

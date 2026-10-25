@@ -9,7 +9,8 @@ import { initCursor } from "./cursor.js";
 import { mountPortfolio } from "./portfolio.js";
 import { mountCalculator } from "./calculator.js";
 import { mountReviews } from "./reviews.js";
-import { loadMenu } from "./api.js";
+import { loadMenu, hasServer } from "./api.js";
+import { initTracking, track, watchSections } from "./track.js";
 import { indexMenu } from "../shared/menu.js";
 import * as store from "./store.js";
 import * as V from "./views.js";
@@ -44,6 +45,7 @@ async function boot() {
   }
   app.idx = indexMenu(app.menu);
   store.initStore(app.idx);
+  initTracking({ server: hasServer() });
   setHTML($("#footer"), V.footerView(app.menu));
   const wa = V.greetingUrl(app.menu.settings);
   $$("[data-whats]").forEach((a) => { if (wa) { a.href = wa; a.hidden = false; } });
@@ -123,6 +125,7 @@ async function route({ first = false } = {}) {
     if (token !== navToken) return;
   }
   render(r);
+  track("page", { r: r.name, id: r.id || "" });
   app.key = key;
   if (r.section) requestAnimationFrame(() => scrollTo($(`#${r.section}`) || 0, { immediate: first })); // seção desligada no painel: vai ao topo
   else scrollTo(0, { immediate: true });
@@ -152,6 +155,7 @@ function render(r) {
       mountPortfolio($("#portfolio"), app.menu.content.portfolio, { whatsapp: app.menu.settings.whatsapp }),
       mountReviews($("#avaliacoes")),
       homeEffects(),
+      watchSections(view),
     );
     document.title = `${brand} · ${app.menu.content.heroKicker}`;
   }

@@ -14,6 +14,8 @@ import { openLayer, closeLayer } from "./dialog.js";
 import { ui } from "./icons.js";
 import { PORTFOLIO_CATEGORIES } from "../shared/menu.js";
 import { whatsappUrl } from "../shared/quote.js";
+import { photoId } from "../shared/analytics.js";
+import { track } from "./track.js";
 
 const AUTOPLAY_MS = 4500;
 const AUTO_KEY = "cjr:lb-auto";
@@ -132,6 +134,9 @@ export function openLightbox(items, list, startIndex, { whatsapp } = {}) {
     const wa = whatsappUrl(whatsapp, `Olá, Chef Carlos! Vi no portfólio do site a foto "${p.caption || category}" (${category}) e quero algo assim no meu evento.`);
     cta.hidden = !wa;
     if (wa) cta.href = wa;
+    cta.dataset.lead = "portfolio";
+    cta.dataset.leadInfo = JSON.stringify({ photo: photoId(p) });
+    track("photo", { id: photoId(p) });
     elapsed = 0;
     [list[pos + 1], list[pos - 1]].forEach((n) => { if (n !== undefined) new Image().src = imgSrc(items[n].image); });
   };

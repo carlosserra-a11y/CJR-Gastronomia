@@ -254,3 +254,49 @@ test("versão pública esconde opções da calculadora desativadas ou de categor
   assert.ok(!ids.includes("sobremesas"));
   assert.ok(ids.includes("buffet-de-risoto"));
 });
+
+/* ---------- Estatísticas ---------- */
+
+test("estatísticas: só passam ações conhecidas, com campos limpos e sem dados pessoais", async () => {
+  const { cleanEvent, validSession } = await import("../js/shared/analytics.js");
+  assert.equal(cleanEvent({ type: "hack", data: {} }), null);
+  assert.equal(cleanEvent({ type: "dish", data: { c: "<script>", i: "x" } }), null);
+  assert.equal(cleanEvent({ type: "section", data: { id: "constructor" } }), null);
+  const lead = cleanEvent({ type: "lead", data: { src: "orcamento", et: "Casamento", g: "120", m: "2026-13", name: "Ana", phone: "48999", items: [["a", "b"], ["<x>", "y"], "z"] } });
+  assert.deepEqual(lead.data, { src: "orcamento", et: "Casamento", g: 120, m: "", items: [["a", "b"]], o: [], photo: "" });
+  assert.equal(cleanEvent({ type: "visit", data: { src: "  Instagram<b> ", dev: "geladeira" } }).data.src, "instagramb");
+  assert.equal(cleanEvent({ type: "visit", data: { dev: "geladeira" } }).data.dev, "desktop");
+  assert.ok(validSession("abc123def456"));
+  assert.ok(!validSession("ABC") && !validSession("../etc"));
+});
+
+test("relatório: conta visitas, pedidos (sem duplicar), pratos e origem", async () => {
+  const { summarize } = await import("../js/shared/analytics.js");
+  const now = new Date("2026-10-20T15:00:00Z");
+  const at = (h) => new Date(now.getTime() - h * 3600e3).toISOString();
+  const lead = { src: "orcamento", et: "Corporativo", g: 50, m: "2026-11", items: [["coffee-corporativo", "coffee-break-basic"]], o: [], photo: "" };
+  const rows = [
+    { at: at(30), session: "a", type: "visit", data: { src: "google", dev: "mobile" } },
+    { at: at(30), session: "a", type: "dish", data: { c: "coffee-corporativo", i: "coffee-break-basic" } },
+    { at: at(30), session: "a", type: "dish", data: { c: "coffee-corporativo", i: "coffee-break-basic" } },
+    { at: at(29), session: "a", type: "lead", data: lead },
+    { at: at(29), session: "a", type: "lead", data: lead },
+    { at: at(2), session: "b", type: "visit", data: { src: "direto", dev: "desktop" } },
+    { at: at(2), session: "b", type: "section", data: { id: "calculadora" } },
+    { at: at(1), session: "b", type: "calc", data: { g: 100, p: "normal", o: ["mesa-de-frios"] } },
+  ];
+  const s = summarize(rows, { menu: seed, days: 7, now });
+  assert.equal(s.totals.visits, 2);
+  assert.equal(s.totals.leads, 1, "o mesmo pedido enviado duas vezes conta uma vez");
+  assert.equal(s.totals.leadRate, 50);
+  assert.equal(s.dishes[0].adds, 1, "marcar o mesmo prato de novo não conta duas vezes");
+  assert.equal(s.dishes[0].leads, 1);
+  assert.equal(s.sources.find((x) => x.id === "google").leads, 1);
+  assert.equal(s.calc.uses, 1);
+  assert.equal(s.calc.options[0].name, "Mesa de frios");
+  assert.equal(s.daily.length, 7);
+  assert.equal(s.daily.reduce((n, d) => n + d.leads, 0), 1);
+  assert.equal(s.sections.find((x) => x.id === "calculadora").pct, 50);
+  assert.equal(s.guests.avg, 50);
+  assert.equal(s.funnel[3].n, 1);
+});

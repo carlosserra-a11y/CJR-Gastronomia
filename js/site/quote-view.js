@@ -8,6 +8,7 @@ import { validateQuote, buildQuoteMessage, whatsappUrl } from "../shared/quote.j
 import { summaryView, confirmView } from "./views.js";
 import { openLayer } from "./dialog.js";
 import * as store from "./store.js";
+import { track } from "./track.js";
 
 let draft = {};
 export const getDraft = () => draft;
@@ -119,6 +120,11 @@ export function bindQuote(root, menu) {
     const names = Object.fromEntries(menu.categories.map((c) => [c.id, c.name]));
     const text = buildQuoteMessage({ quote: r.value, lines: store.lines(), categoryNames: names, brandName: menu.settings.brandName });
     const url = whatsappUrl(menu.settings.whatsapp, text);
+    // estatística anônima do pedido: tipo de evento, convidados, mês e pratos (sem nome, telefone ou e-mail)
+    track("lead", {
+      src: "orcamento", et: r.value.eventType, g: r.value.guests, m: r.value.date.slice(0, 7),
+      items: store.lines().flatMap((l) => l.items.map((i) => [l.category.id, i.id])),
+    });
     if (url) window.open(url, "_blank", "noopener");
     openConfirm({ text, url, settings: menu.settings });
   });

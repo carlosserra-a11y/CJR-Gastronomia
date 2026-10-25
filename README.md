@@ -53,6 +53,7 @@ Na primeira vez que o servidor liga, o terminal mostra um **código de configura
 | Atualizar **nota/total do Google** ou cadastrar **depoimentos** | **Textos do site** → Avaliações de clientes |
 | Desfazer uma alteração | **Histórico** → Restaurar |
 | Ver o que falta antes de divulgar | **Visão geral** (lista de pendências) |
+| Ver **visitas, pedidos de orçamento, pratos mais procurados**, de onde vêm os clientes, horários e mais | **Estatísticas** (7, 30, 90 dias ou 12 meses) |
 
 Tudo o que você muda fica como **rascunho** até clicar em **Salvar e publicar** (a barra aparece embaixo).
 
@@ -127,6 +128,7 @@ npm run build      # = build:3d (cena 3D) + build:vendor (Lenis)
 ## 🔒 Segurança e privacidade
 
 - **Dados dos clientes não são gravados no servidor**: a mensagem é montada no navegador e enviada pelo próprio cliente no WhatsApp. A seleção fica só no aparelho dele (há aviso de privacidade no site).
+- **Estatísticas anônimas** (painel → Estatísticas): o site registra ações como "escolheu tal prato", "enviou pedido" e a origem da visita, sem cookies e sem nome, telefone, e-mail ou IP. Respeita "não rastrear" do navegador; dados com mais de 400 dias são apagados sozinhos. Só funciona com o servidor no ar (no GitHub Pages não há onde gravar). Para medir campanhas, use links com `?utm_source=instagram&utm_campaign=nome`.
 - Senhas com **scrypt** + sal; sessão em cookie `HttpOnly` + `SameSite=Strict`; proteção CSRF; limite de tentativas de login.
 - Todo conteúdo é **escapado** antes de aparecer na tela e validado no servidor (fotos só de upload, `assets/img/` ou `https://`).
 - Cabeçalhos de segurança (CSP sem script inline, nosniff, frame-ancestors) e lista branca de arquivos servidos.

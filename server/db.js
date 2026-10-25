@@ -3,6 +3,7 @@
    Guarda: versões do cardápio (cada "Salvar" do painel cria uma),
    contas da equipe, sessões e o histórico de segurança.
    Dados de clientes NÃO são gravados: o orçamento vai direto ao WhatsApp.
+   As estatísticas guardam só ações anônimas (ex.: "escolheu tal prato").
    ============================================================ */
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
@@ -51,7 +52,18 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+
+-- Estatísticas do site: o que os visitantes fizeram (anônimo — sem nome, telefone, e-mail ou IP)
+CREATE TABLE IF NOT EXISTS events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL,
+  session TEXT NOT NULL,             -- código aleatório da visita, criado no navegador
+  type TEXT NOT NULL,
+  data TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at);
 `;
+const MAX_STAT_ROWS = 300_000;
 
 /** Abre (ou cria) o banco. `seed` é o cardápio inicial, usado só quando ainda não há versões. */
 export function openDatabase(dataDir, { seed } = {}) {
@@ -119,12 +131,27 @@ function createApi(db) {
   }
   const listAudit = (limit = 50) => db.prepare("SELECT username, action, detail, created_at FROM audit_log ORDER BY id DESC LIMIT ?").all(limit);
 
+  /* ---------- Estatísticas do site ---------- */
+  function addEvents(session, events, at = now()) {
+    const insert = db.prepare("INSERT INTO events (created_at, session, type, data) VALUES (?, ?, ?, ?)");
+    db.exec("BEGIN");
+    try {
+      for (const e of events) insert.run(at, session, e.type, JSON.stringify(e.data));
+      db.exec("COMMIT");
+    } catch (err) { db.exec("ROLLBACK"); throw err; }
+  }
+  const eventsSince = (iso) => db.prepare("SELECT created_at, session, type, data FROM events WHERE created_at >= ? ORDER BY id LIMIT ?")
+    .all(iso, MAX_STAT_ROWS)
+    .map((r) => ({ at: r.created_at, session: r.session, type: r.type, data: parse(r.data, {}) }));
+  const purgeEvents = (beforeIso) => db.prepare("DELETE FROM events WHERE created_at < ?").run(beforeIso).changes;
+
   return {
     db,
     currentMenu, saveMenu, listVersions, getVersion,
     countUsers, findUserByName, findUser, listUsers, createUser, setPassword, setUserActive, touchLogin,
     createSession, getSession, extendSession, deleteSession, deleteUserSessions, purgeSessions,
     audit, listAudit,
+    addEvents, eventsSince, purgeEvents,
     close: () => db.close(),
   };
 }

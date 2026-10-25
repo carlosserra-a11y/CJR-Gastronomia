@@ -15,6 +15,10 @@ import {
   parseCookies, sessionCookie, sessionCookieName, SESSION_TTL_MS, SESSION_MAX_MS, CSRF_HEADER_VALUE, rateLimiter, securityHeaders,
 } from "./security.js";
 import { publicView, diffMenus } from "../js/shared/menu.js";
+import { cleanEvent, validSession, summarize, MAX_BATCH, KEEP_DAYS, STAT_PERIODS } from "../js/shared/analytics.js";
+
+const BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed/i; // robôs que rodam JavaScript
+const DAY_MS = 864e5;
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const SEED_MENU_PATH = join(ROOT, "data", "menu.json");
@@ -78,6 +82,8 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
     password: rateLimiter({ windowMs: 15 * 60_000, max: 10 }), // troca de senha, por usuário
     upload: rateLimiter({ windowMs: 60 * 60_000, max: 80 }), // fotos por hora, por usuário (não deixa encher o disco)
     backup: rateLimiter({ windowMs: 60 * 60_000, max: 6 }),
+    track: rateLimiter({ windowMs: 60_000, max: 60 }), // envios de estatística, por IP
+    trackAll: rateLimiter({ windowMs: 60_000, max: 2000 }), // e no total (o banco não enche com envios falsos)
   };
   const limited = (limiter, keyOf) => (req, res, next) => {
     const r = limiter.take(keyOf(req));
@@ -101,7 +107,27 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
     if (req.get("if-none-match") === etag) return res.status(304).end();
     res.type("application/json").send(body);
   });
+
+  // Estatísticas: o site manda o que o visitante fez (anônimo). Só do próprio site, sem robôs.
+  pub.post("/track", limited(limits.track, ip), limited(limits.trackAll, () => "all"), express.json({ limit: "16kb", type: ["application/json", "text/plain"] }), (req, res) => { // sendBeacon envia como texto
+    const site = req.get("sec-fetch-site");
+    const origin = req.get("origin");
+    let originHost = "";
+    try { originHost = origin ? new URL(origin).host : ""; } catch { /* origem malformada */ }
+    const foreign = (site && site !== "same-origin") || (origin && originHost !== req.get("host"));
+    if (foreign || BOT_UA.test(req.get("user-agent") || "")) return res.status(204).end();
+    const session = req.body?.s;
+    const events = (Array.isArray(req.body?.e) ? req.body.e : []).slice(0, MAX_BATCH).map(cleanEvent).filter(Boolean);
+    if (!validSession(session)) return res.status(400).json({ error: "Requisição inválida." });
+    if (events.length) store.addEvents(session, events);
+    res.status(204).end();
+  });
   app.use("/api", pub);
+
+  // estatísticas antigas saem sozinhas (uma vez ao iniciar e depois todo dia)
+  const purge = () => { try { store.purgeEvents(new Date(Date.now() - KEEP_DAYS * DAY_MS).toISOString()); } catch (e) { logger.error?.("Limpeza de estatísticas falhou:", e.message); } };
+  purge();
+  setInterval(purge, DAY_MS).unref();
 
   /* ================================================================
      API DO PAINEL (/api/admin)
@@ -253,6 +279,14 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   });
 
   adm.get("/activity", (req, res) => res.json(store.listAudit(60)));
+
+  /* ---------- Estatísticas do site ---------- */
+  adm.get("/stats", (req, res) => {
+    const days = STAT_PERIODS.includes(Number(req.query.days)) ? Number(req.query.days) : 30;
+    const now = new Date();
+    const rows = store.eventsSince(new Date(now.getTime() - days * DAY_MS).toISOString());
+    res.json(summarize(rows, { menu: store.currentMenu().menu, days, now }));
+  });
 
   /* ---------- Cardápio ---------- */
   adm.get("/menu", (req, res) => res.json(store.currentMenu()));

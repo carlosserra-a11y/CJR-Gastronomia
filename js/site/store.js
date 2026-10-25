@@ -1,6 +1,7 @@
 /* "Minha experiência": estado da seleção, salvo só no aparelho do cliente. */
 import { storage } from "./util.js";
 import * as S from "../shared/selection.js";
+import { track } from "./track.js";
 
 const KEY = "cjr:selection:v1";
 const listeners = new Set();
@@ -29,6 +30,7 @@ export function toggle(categoryId, itemId) {
   if (!category) return null;
   const r = S.toggleItem(state, category, itemId);
   commit(r.state);
+  if (!r.error && S.isSelected(r.state, categoryId, itemId)) track("dish", { c: categoryId, i: itemId });
   return r.error;
 }
 
@@ -39,7 +41,9 @@ export const clearAll = () => commit({});
 export function applyPreset(categoryId, presetId) {
   const category = categoryOf(categoryId);
   const preset = category?.presets?.find((p) => p.id === presetId);
-  if (preset) commit(S.applyPreset(state, category, preset));
+  if (!preset) return;
+  commit(S.applyPreset(state, category, preset));
+  track("preset", { c: categoryId, p: presetId });
 }
 
 export const isSelected = (categoryId, itemId) => S.isSelected(state, categoryId, itemId);
