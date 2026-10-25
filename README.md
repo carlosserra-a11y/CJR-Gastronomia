@@ -1,14 +1,16 @@
 # Chef Carlos Jr · CJR Gastronomia — cardápio virtual
 
-Cardápio virtual da **CJR Gastronomia** (experiências gastronômicas para eventos sociais e corporativos, com o Chef Carlos Junior), feito a partir do briefing oficial:
+Cardápio virtual da **CJR Gastronomia** (alta gastronomia itinerante para eventos sociais e corporativos, com o Chef Carlos Junior, em Florianópolis e região), feito a partir do briefing oficial:
 
-- **Visual premium**: verde-escuro e preto com detalhes em dourado, serifa clássica (Cormorant Garamond) + Manrope, logo oficial em assinatura.
-- **Hero interativo no fundo da página** (WebGL, sem bibliotecas): "seda" verde em movimento com linhas douradas, pó dourado subindo, luz que segue o mouse e uma onda a cada clique. Fica fixo atrás da página inteira e escurece conforme a rolagem desce.
-- **Paralaxe na rolagem**: rolagem suave (Lenis), folhas de palmeira desenhadas em código em várias profundidades (balançam com o mouse e se abrem ao rolar), retrato do chef em paralaxe, títulos que entram palavra por palavra, cartões em colunas com velocidades diferentes, faixa de eventos que acelera com a rolagem, "Como funciona" com passos que acendem, textos gigantes vazados que deslizam na horizontal e galeria horizontal presa (quando houver fotos).
+- **Visual "cozinha do chef"**: fundo claro de linho e mármore, grafite, cobre das panelas e inox nos detalhes; serifa clássica (Cormorant Garamond) + Manrope; logo oficial em assinatura.
+- **Objetos 3D no topo** (three.js): faca, garfo, colher, tomates, manjericão, alecrim, limão e grãos de pimenta e sal em inox e materiais realistas. Giram com o mouse, se espalham ao rolar e "pulam" com um toque. No celular ficam só nas bordas, para não cobrir o texto. O pacote 3D só é baixado na página inicial e não roda com "reduzir movimento".
+- **Portfólio interativo** com as fotos reais dos eventos: anel 3D que gira sozinho, com a rolagem e ao arrastar; grade com filtros por categoria e colunas em paralaxe; visualizador em tela cheia com setas, teclado e deslizar no celular.
+- **Paralaxe na rolagem**: rolagem suave (Lenis), títulos que entram palavra por palavra, cartões em colunas com velocidades diferentes, faixa de eventos que acelera com a rolagem, "Como funciona" com passos que acendem e textos gigantes vazados ao fundo.
 - **Cardápio completo do briefing**: Coffee Corporativo, Mesa de Frios, Finger Foods (7 grupos), 6 Buffets, Sobremesas (com seleções prontas), Buffet de Risotos (com escolha de formato), Cook Show e "Aumente sua Experiência" (ativações).
 - **Monte sua experiência**: o cliente marca pacotes e itens (fica salvo no aparelho), preenche o formulário do evento e o site abre o **WhatsApp com a mensagem organizada**. **Nenhum preço final é calculado** (como pede o briefing).
 - **Painel da equipe** (`/admin/`): editar categorias, pacotes, itens, preços de referência, disponibilidade, fotos e todos os textos, ativar/desativar sem apagar, ordem, **histórico de versões com "restaurar"** e contas da equipe.
 - Acessível (contraste, foco visível, teclado, "reduzir movimento" desliga as animações) e responsivo (celular, tablet e computador).
+- **Contato do Chef**: WhatsApp (48) 99683-5439 · Instagram [@chefcarlosjr_gastronomia](https://www.instagram.com/chefcarlosjr_gastronomia/) · Florianópolis e região. Tudo editável no painel.
 
 ---
 
@@ -41,7 +43,8 @@ Na primeira vez que o servidor liga, o terminal mostra um **código de configura
 | Esconder algo sem apagar | Botão **Ativo/Oculto** |
 | Adicionar item, grupo, categoria ou "seleção pronta" | Botões **+** dentro de **Cardápio** |
 | Mostrar "a partir de R$ …" no site | **Contato e configurações** → Preços (desligado por padrão) |
-| Trocar textos do topo, do Chef, "Como funciona", galeria, aviso de privacidade | **Textos do site** |
+| Trocar textos do topo, do Chef, "Como funciona", aviso de privacidade | **Textos do site** |
+| Adicionar, reordenar ou tirar **fotos do portfólio** (com categoria e legenda) | **Textos do site** → Portfólio |
 | Desfazer uma alteração | **Histórico** → Restaurar |
 | Ver o que falta antes de divulgar | **Visão geral** (lista de pendências) |
 
@@ -88,17 +91,27 @@ js/shared/quote.js       validação do formulário e mensagem do WhatsApp
 js/site/main.js          rotas, transições e efeitos da página inicial
 js/site/views.js         modelos das telas
 js/site/motion.js        rolagem suave, laço único de animação, paralaxe e revelações
-js/site/hero-bg.js       fundo interativo em WebGL
-js/site/fronds.js        folhas de palmeira desenhadas em código
-js/site/cursor.js        cursor dourado, botões magnéticos, cartões 3D
+js/site/portfolio.js     portfólio: anel 3D, grade com filtros e visualizador
+js/site/kitchen3d.js     cena 3D do topo já empacotada (gerada — não editar à mão)
+src/3d/kitchen.js        código-fonte da cena 3D (three.js)
+js/site/cursor.js        cursor, botões magnéticos, cartões com inclinação
 js/admin/*.js            painel: núcleo, cardápio, textos, histórico, conta
 data/menu.json           cardápio inicial (do briefing) e versão do GitHub Pages
-assets/img/              logo, foto do chef, ícone
+assets/img/              logo (clara e escura), foto do chef, mármore, ícone
+assets/img/portfolio/    fotos dos eventos (versão grande e miniatura -sm)
 server/                  Express + SQLite (node:sqlite): API, sessões, validação
 tests/                   testes automáticos (npm test)
 ```
 
 Endereços de teste: `?nointro` pula a abertura animada.
+
+### Alterar a cena 3D ou atualizar bibliotecas
+
+O site não tem etapa de build para rodar: os arquivos gerados já estão no repositório. Só é preciso gerar de novo ao mexer em `src/3d/kitchen.js` ou atualizar three.js/Lenis:
+
+```bash
+npm run build      # = build:3d (cena 3D) + build:vendor (Lenis)
+```
 
 ## 🔒 Segurança e privacidade
 
@@ -113,7 +126,7 @@ Endereços de teste: `?nointro` pula a abertura animada.
 npm test
 ```
 
-Cobrem: versão pública do cardápio, regras de seleção (escolha única, limite, seleções prontas), validação do formulário, mensagem do WhatsApp (sem preço), primeiro acesso, login, CSRF, salvar/versões/conflito/restaurar, validação do cardápio e upload de imagens.
+Cobrem: versão pública do cardápio (sem itens ocultos nem preços escondidos), regras de seleção (escolha única, limite, seleções prontas), validação do formulário, mensagem do WhatsApp (sem preço), primeiro acesso, login, CSRF, salvar/versões/conflito/restaurar, ETag do cardápio, validação do cardápio e do portfólio e upload de imagens.
 
 ## ✅ Antes de divulgar (do briefing)
 

@@ -11,6 +11,8 @@
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
     "test": "node --disable-warning=ExperimentalWarning --test \"tests/*.test.js\"",
+    "build": "npm run build:3d && npm run build:vendor",
+    "build:3d": "esbuild src/3d/kitchen.js --bundle --format=esm --minify --target=es2020 --legal-comments=none \"--banner:js=/*! three.js (MIT License) https://threejs.org */\" --outfile=js/site/kitchen3d.js",
     "build:vendor": "esbuild node_modules/lenis/dist/lenis.mjs --bundle --format=esm --minify --target=es2020 --legal-comments=none \"--banner:js=/*! Lenis (MIT License) https://github.com/darkroomengineering/lenis */\" --outfile=js/vendor/lenis.mjs"
   },
   "dependencies": {
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.25.0",
-    "lenis": "^1.3.0"
+    "lenis": "^1.3.0",
+    "three": "^0.170.0"
   }
 }

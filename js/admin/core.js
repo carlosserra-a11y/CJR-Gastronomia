@@ -193,6 +193,20 @@ export function bindFields(root, { onChange } = {}) {
   bindImageFields(root);
 }
 
+/**
+ * Depois de redesenhar uma lista, devolve o foco ao primeiro controle habilitado entre os seletores
+ * (em ordem de preferência). Com um modal aberto, espera ele fechar: até lá o resto da página fica inerte.
+ */
+export function refocus(root, ...selectors) {
+  const open = document.querySelector("dialog[open]");
+  if (open) { open.addEventListener("close", () => refocus(root, ...selectors), { once: true }); return null; }
+  for (const sel of selectors) {
+    const el = sel ? root?.querySelector(sel) : null;
+    if (el && !el.disabled) { el.focus({ preventScroll: true }); return el; }
+  }
+  return null;
+}
+
 /* ---------- Fotos ---------- */
 
 async function resizeImage(file, max) {
@@ -216,7 +230,12 @@ export function bindImageFields(root) {
     const input = box.querySelector("input[data-bind], input[name]");
     const preview = box.querySelector(".img-preview");
     const show = (v) => setHTML(preview, v ? html`<img src="${imgSrc(v)}" alt="">` : html`<span>Sem foto</span>`);
-    const commit = (v) => { input.value = v; if (input.dataset.bind) setDraft(input.dataset.bind, v); show(v); };
+    const commit = (v) => {
+      input.value = v;
+      if (input.dataset.bind) setDraft(input.dataset.bind, v);
+      input.dispatchEvent(new Event("change", { bubbles: true })); // avisa quem observa o campo (ex.: portfólio limpa a miniatura antiga)
+      show(v);
+    };
     input.addEventListener("change", () => show(input.value.trim()));
     box.querySelector("[data-clear-img]")?.addEventListener("click", () => commit(""));
     file.addEventListener("change", async () => {

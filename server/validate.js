@@ -3,7 +3,7 @@
    documento completo). Devolve um objeto limpo ou lança
    ValidationError com uma mensagem que diz ONDE está o problema.
    ============================================================ */
-import { TIERS } from "../js/shared/menu.js";
+import { TIERS, PORTFOLIO_CATEGORIES } from "../js/shared/menu.js";
 
 export class ValidationError extends Error {
   constructor(message, field) { super(message); this.status = 400; this.field = field; }
@@ -104,10 +104,18 @@ function content(input) {
     value: str(st?.value, { field: `Destaque ${i + 1} (número)`, required: true, max: 12 }),
     label: str(st?.label, { field: `Destaque ${i + 1} (texto)`, max: 80 }),
   }));
-  const gallery = (Array.isArray(input.gallery) ? input.gallery : []).slice(0, 24).map((g, i) => ({
-    image: imagePath(g?.image, `Galeria — foto ${i + 1}`),
-    caption: str(g?.caption, { field: `Galeria — legenda ${i + 1}`, max: 120 }),
-  })).filter((g) => g.image);
+  const portfolio = (Array.isArray(input.portfolio) ? input.portfolio : []).slice(0, 80).map((p, i) => {
+    const image = imagePath(p?.image, `Portfólio — foto ${i + 1}`);
+    return {
+      image,
+      thumb: imagePath(p?.thumb, `Portfólio — miniatura ${i + 1}`) || image,
+      w: int(p?.w, { field: `Portfólio — largura ${i + 1}`, min: 0, max: 10000 }),
+      h: int(p?.h, { field: `Portfólio — altura ${i + 1}`, min: 0, max: 10000 }),
+      // hasOwn converte a chave para texto: sem o typeof, ["mesa"] passaria e a foto sumiria dos filtros
+      category: typeof p?.category === "string" && Object.hasOwn(PORTFOLIO_CATEGORIES, p.category) ? p.category : "eventos",
+      caption: str(p?.caption, { field: `Portfólio — legenda ${i + 1}`, max: 120 }),
+    };
+  }).filter((p) => p.image);
   return {
     heroKicker: s("heroKicker", "Topo — chamada pequena", 80),
     heroTitle: str(input.heroTitle, { field: "Topo — título", required: true, max: 120 }),
@@ -125,7 +133,9 @@ function content(input) {
     chefStats: stats,
     aboutTitle: s("aboutTitle", "Sobre — título", 80),
     aboutText: s("aboutText", "Sobre — texto", 2000, true),
-    gallery,
+    portfolioTitle: s("portfolioTitle", "Portfólio — título", 80) || "Portfólio",
+    portfolioIntro: s("portfolioIntro", "Portfólio — texto", 400, true),
+    portfolio,
     ctaTitle: s("ctaTitle", "Chamada final — título", 100),
     ctaText: s("ctaText", "Chamada final — texto", 300, true),
     privacyText: str(input.privacyText, { field: "Aviso de privacidade", required: true, max: 5000, multiline: true }),
@@ -197,7 +207,7 @@ function category(input, n) {
       options: choiceOptions,
     },
     active: bool(input?.active, true),
-    presets,
+    presets: input?.select === "one" ? [] : presets, // seleção pronta só faz sentido com várias escolhas
     groups,
   };
 }

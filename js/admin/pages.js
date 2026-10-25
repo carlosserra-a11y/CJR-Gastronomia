@@ -13,11 +13,11 @@ export async function overviewView(view) {
   const items = cats.flatMap((c) => c.groups.flatMap((g) => g.items));
   const activeItems = items.filter((i) => i.active !== false);
   const withPrice = items.filter((i) => i.price !== null && i.price !== undefined && i.price !== "");
-  const photos = cats.filter((c) => c.image).length + items.filter((i) => i.image).length + (m.content.gallery?.length || 0);
+  const photos = cats.filter((c) => c.image).length + items.filter((i) => i.image).length + (m.content.portfolio?.length || 0);
   const checks = [
     { ok: Boolean(m.settings.whatsapp), text: "Número do WhatsApp configurado", href: "#contato", hint: "Sem ele, os pedidos não abrem no WhatsApp da equipe." },
     { ok: Boolean(m.content.chefImage), text: "Foto do Chef Carlos Junior", href: "#textos" },
-    { ok: photos > 0, text: "Fotos dos serviços ou galeria", href: "#cardapio", hint: "Opcional, mas valoriza muito o cardápio." },
+    { ok: photos > 0, text: "Fotos dos serviços ou do portfólio", href: "#cardapio", hint: "Opcional, mas valoriza muito o cardápio." },
     { ok: Boolean(m.settings.instagram || m.settings.email), text: "Instagram ou e-mail no rodapé", href: "#contato" },
     { ok: Boolean(m.settings.serviceArea), text: "Região atendida", href: "#contato" },
     { ok: !m.settings.showPrices || withPrice.length > 0, text: m.settings.showPrices ? "Preços preenchidos" : "Preços ocultos (valores sob consulta)", href: "#contato" },

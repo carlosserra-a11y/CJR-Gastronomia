@@ -37,11 +37,41 @@ test("o cardápio do briefing passa na validação sem perder nada", () => {
   assert.equal(count(clean), count(raw));
 });
 
+test("portfólio: categoria desconhecida vira 'eventos', miniatura cai na foto e linha sem foto sai", () => {
+  const raw = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
+  raw.content.portfolio = [
+    { image: "assets/img/portfolio/mesa-01.webp", thumb: "", w: 1600, h: 1200, category: "inexistente", caption: "Mesa posta" },
+    { image: "", caption: "Sem foto" },
+  ];
+  const clean = menuDoc(raw).content.portfolio;
+  assert.equal(clean.length, 1);
+  assert.equal(clean[0].category, "eventos");
+  assert.equal(clean[0].thumb, "assets/img/portfolio/mesa-01.webp");
+  assert.equal(clean[0].w, 1600);
+
+  raw.content.portfolio = [{ image: "assets/img/portfolio/mesa-01.webp", category: ["mesa"], caption: "" }];
+  assert.equal(menuDoc(raw).content.portfolio[0].category, "eventos", "categoria precisa ser texto");
+
+  raw.content.portfolio = [{ image: 'assets/img/a.webp"onerror="x', caption: "" }];
+  assert.throws(() => menuDoc(raw), /Portfólio — foto 1/);
+  raw.content.portfolio = [{ image: "assets/img/portfolio/mesa-01.webp", caption: "x".repeat(121) }];
+  assert.throws(() => menuDoc(raw), /Portfólio — legenda 1/);
+});
+
+test("seleções prontas são descartadas em categoria de escolha única", () => {
+  const raw = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
+  const single = raw.categories.find((c) => c.select === "one");
+  single.presets = [{ id: "teste", name: "Teste", itemIds: single.groups[0].items.slice(0, 2).map((i) => i.id) }];
+  assert.deepEqual(menuDoc(raw).categories.find((c) => c.id === single.id).presets, []);
+});
+
 test("cardápio público: só itens ativos, com versão e ETag", async () => {
   const r = await call("GET", "/api/menu");
   assert.equal(r.status, 200);
   assert.equal(r.data.categories.length, 8);
   assert.equal(typeof r.data.version, "number");
+  // o ETag leva um resumo do conteúdo: um banco recriado (de novo na versão 1) não reaproveita o cardápio antigo do navegador
+  assert.match(r.res.headers.get("etag"), /^W\/"v\d+-[0-9a-f]{16}"$/);
   const again = await fetch(base + "/api/menu", { headers: { "If-None-Match": r.res.headers.get("etag") } });
   assert.equal(again.status, 304);
 });
@@ -135,7 +165,8 @@ test("restaurar versão volta o conteúdo e entra no histórico", async () => {
   const { data: cur } = await call("GET", "/api/admin/menu");
   const r = await call("POST", "/api/admin/versions/1/restore", { baseVersion: cur.version });
   assert.equal(r.status, 200, JSON.stringify(r.data));
-  assert.equal(r.data.menu.settings.whatsapp, "");
+  const seedWhatsapp = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8")).settings.whatsapp;
+  assert.equal(r.data.menu.settings.whatsapp, seedWhatsapp, "volta ao número do cardápio inicial");
   assert.equal(r.data.summary[0], "Versão #1 restaurada");
 });
 

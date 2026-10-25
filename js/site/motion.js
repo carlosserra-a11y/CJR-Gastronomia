@@ -68,7 +68,8 @@ function applyParallax() {
   const damp = motion.vw < NARROW ? 0.45 : 1;
   for (const p of parallax) {
     const d = p.center - center;
-    if (Math.abs(d) > motion.vh * 1.6) continue;
+    // só pula o que está fora da tela de verdade: colunas altas (portfólio) continuam se movendo enquanto aparecem
+    if (Math.abs(d) > motion.vh * 0.6 + p.half) continue;
     const ty = -d * p.speed * damp;
     const tx = -d * p.speedX * damp;
     if (Math.abs(ty - p.ty) < 0.1 && Math.abs(tx - p.tx) < 0.1) continue;
@@ -85,6 +86,7 @@ export function measure() {
   for (const p of parallax) {
     const r = p.el.getBoundingClientRect();
     p.center = r.top + y - p.ty + r.height / 2;
+    p.half = r.height / 2;
   }
 }
 
@@ -93,7 +95,7 @@ export function scan(root = document) {
   parallax = parallax.filter((p) => document.contains(p.el));
   for (const el of root.querySelectorAll("[data-speed], [data-speed-x]")) {
     if (parallax.some((p) => p.el === el)) continue;
-    parallax.push({ el, speed: Number(el.dataset.speed) || 0, speedX: Number(el.dataset.speedX) || 0, center: 0, ty: 0, tx: 0 });
+    parallax.push({ el, speed: Number(el.dataset.speed) || 0, speedX: Number(el.dataset.speedX) || 0, center: 0, half: 0, ty: 0, tx: 0 });
   }
   for (const el of root.querySelectorAll("[data-reveal]:not(.is-in)")) {
     if (motion.reduced || !revealObserver) el.classList.add("is-in");
@@ -108,7 +110,10 @@ export function scan(root = document) {
 /* ---------- Rolagem ---------- */
 
 export function scrollTo(target, { immediate = false, offset = -90 } = {}) {
-  if (lenis) lenis.scrollTo(target, { immediate, offset: typeof target === "number" ? 0 : offset, duration: 1.4 });
+  if (lenis) {
+    lenis.resize(); // a tela acabou de ser trocada: sem medir de novo, o Lenis limitaria a rolagem à altura da anterior
+    lenis.scrollTo(target, { immediate, offset: typeof target === "number" ? 0 : offset, duration: 1.4 });
+  }
   else if (typeof target === "number") window.scrollTo({ top: target, behavior: immediate ? "instant" : "smooth" });
   else target?.scrollIntoView({ behavior: immediate || motion.reduced ? "instant" : "smooth", block: "start" });
 }

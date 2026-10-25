@@ -103,6 +103,12 @@ test("seleção pronta, formato e remoção", () => {
   assert.equal(s["buffet-de-risotos"].choice, "Preparado ao vivo");
 });
 
+test("seleção pronta em categoria de escolha única marca só um item", () => {
+  const buffets = cat("buffets");
+  const s = applyPreset({}, buffets, { id: "teste", name: "Teste", itemIds: ["feijoada-especial", "estacao-italiana"] });
+  assert.deepEqual(s.buffets.ids, ["feijoada-especial"]);
+});
+
 test("seleção salva é limpa de itens que não existem mais", () => {
   const dirty = {
     buffets: { ids: ["feijoada-especial", "sabores-do-dia"], choice: "" },

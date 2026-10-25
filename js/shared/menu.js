@@ -7,6 +7,16 @@
 export const SELECT_MODES = { one: "Escolher uma opção", many: "Escolher várias opções" };
 export const TIERS = ["", "Basic", "Medium", "Premium"];
 
+/** Categorias do portfólio (filtros do site e opções do painel). */
+export const PORTFOLIO_CATEGORIES = {
+  mesa: "Mesas de frios",
+  coffee: "Coffee & café",
+  pratos: "Pratos",
+  buffet: "Buffets & risotos",
+  doces: "Doces",
+  eventos: "Eventos & bastidores",
+};
+
 const isActive = (x) => Boolean(x) && x.active !== false;
 
 /**

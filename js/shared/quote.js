@@ -110,7 +110,8 @@ export function buildQuoteMessage({ quote, lines = [], categoryNames = {}, brand
 
   const parts = [
     `*Solicitação de orçamento — ${plain(brandName)}*`,
-    ["*Contato*", `Nome: ${plain(quote.name)}`, `WhatsApp: ${formatPhone(quote.phone)}`, quote.email ? `E-mail: ${plain(quote.email)}` : ""].filter(Boolean).join("\n"),
+    // O e-mail vai sem filtro: "_" dentro de um endereço não ativa itálico no WhatsApp e precisa ficar intacto
+    ["*Contato*", `Nome: ${plain(quote.name)}`, `WhatsApp: ${formatPhone(quote.phone)}`, quote.email ? `E-mail: ${quote.email}` : ""].filter(Boolean).join("\n"),
     ["*Evento*", `Tipo: ${eventType}`, `Data: ${date}`, `Local: ${plain(quote.place)}`, `Convidados (estimativa): ${quote.guests}`].join("\n"),
   ];
   if (interests.length) parts.push(["*Serviços de interesse*", ...interests].join("\n"));

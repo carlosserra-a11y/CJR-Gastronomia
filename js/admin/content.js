@@ -1,10 +1,11 @@
 /* ============================================================
    Painel → Textos do site e Contato/configurações.
-   Listas repetidas (passos, destaques, galeria) têm botões para
+   Listas repetidas (passos, destaques, portfólio) têm botões para
    adicionar, reordenar e remover.
    ============================================================ */
-import { html, setHTML, S, mutate, field, area, imageField, toggle, bindFields } from "./core.js";
+import { html, setHTML, S, mutate, field, area, choice, imageField, toggle, bindFields, refocus } from "./core.js";
 import { whatsappUrl } from "../shared/quote.js";
+import { PORTFOLIO_CATEGORIES } from "../shared/menu.js";
 
 const move = (arr, i, j) => { if (j < 0 || j >= arr.length) return; const [x] = arr.splice(i, 1); arr.splice(j, 0, x); };
 
@@ -27,9 +28,11 @@ function repeater(key, title, rows, render, { addLabel, max }) {
 const BLANK = {
   howSteps: () => ({ title: "Novo passo", text: "" }),
   chefStats: () => ({ value: "0", label: "" }),
-  gallery: () => ({ image: "", caption: "" }),
+  portfolio: () => ({ image: "", thumb: "", w: 0, h: 0, category: "eventos", caption: "" }),
 };
-const MAX = { howSteps: 8, chefStats: 4, gallery: 24 };
+const MAX = { howSteps: 8, chefStats: 4, portfolio: 80 };
+const CATEGORY_OPTIONS = Object.entries(PORTFOLIO_CATEGORIES);
+const PORTFOLIO_IMAGE = /^content\.portfolio\.(\d+)\.image$/;
 
 export function textsView(view) {
   const c = S.draft.content;
@@ -41,9 +44,9 @@ export function textsView(view) {
     <section class="panel">
       <h3>Topo da página (hero)</h3>
       ${field("Chamada pequena", "content.heroKicker", { max: 80 })}
-      ${field("Título principal", "content.heroTitle", { max: 120, help: "As duas últimas palavras aparecem em itálico dourado." })}
+      ${field("Título principal", "content.heroTitle", { max: 120, help: "As duas últimas palavras aparecem em itálico, na cor cobre." })}
       ${area("Texto de apoio", "content.heroText", { rows: 2, max: 300 })}
-      ${imageField("Foto de fundo do topo (opcional)", "content.heroImage")}
+      ${imageField("Foto do topo (em arco, ao lado do título)", "content.heroImage")}
       ${area("Tipos de evento (um por linha — faixa animada)", "content.eventTypes", { lines: true, rows: 4 })}
     </section>
 
@@ -78,11 +81,13 @@ export function textsView(view) {
     </section>
 
     <section class="panel">
-      <h3>Galeria de eventos</h3>
-      <p class="sub">Com fotos aqui, o site ganha uma galeria que desliza na horizontal enquanto a página rola.</p>
-      ${repeater("gallery", "Fotos", c.gallery || [], (g, i) => html`
-        ${imageField(`Foto ${i + 1}`, `content.gallery.${i}.image`)}
-        ${field("Legenda (opcional)", `content.gallery.${i}.caption`, { max: 120 })}`, { addLabel: "+ Foto", max: MAX.gallery })}
+      <h3>Portfólio</h3>
+      <p class="sub">As fotos aparecem no anel 3D (até 12, alternando as categorias) e na grade com filtros. Fotos sem imagem são ignoradas ao salvar.</p>
+      ${field("Título", "content.portfolioTitle", { max: 80 })}
+      ${area("Texto", "content.portfolioIntro", { rows: 2, max: 400 })}
+      ${repeater("portfolio", "Fotos", c.portfolio || [], (p, i) => html`
+        ${imageField(`Foto ${i + 1}`, `content.portfolio.${i}.image`)}
+        <div class="grid-2">${choice("Categoria (filtro)", `content.portfolio.${i}.category`, CATEGORY_OPTIONS)}${field("Legenda", `content.portfolio.${i}.caption`, { max: 120 })}</div>`, { addLabel: "+ Foto", max: MAX.portfolio })}
     </section>
 
     <section class="panel">
@@ -97,18 +102,36 @@ export function textsView(view) {
     </section>`);
   view.replaceChildren(pane);
   window.scrollTo(0, scroll);
-  bindFields(pane);
+  bindFields(pane, {
+    onChange: (el) => {
+      // foto trocada: a miniatura e as medidas antigas eram da foto anterior (o servidor usa a foto nova como miniatura)
+      const hit = PORTFOLIO_IMAGE.exec(el.dataset.bind || "");
+      if (hit) mutate((d) => { Object.assign(d.content.portfolio[Number(hit[1])], { thumb: "", w: 0, h: 0 }); });
+    },
+  });
 
   pane.addEventListener("click", (e) => {
     const add = e.target.closest("[data-add]");
     const mv = e.target.closest("[data-move]");
     const rm = e.target.closest("[data-remove]");
-    if (add) mutate((d) => { d.content[add.dataset.add] = [...(d.content[add.dataset.add] || []), BLANK[add.dataset.add]()]; });
-    else if (mv) mutate((d) => move(d.content[mv.dataset.move], Number(mv.dataset.i), Number(mv.dataset.i) + Number(mv.dataset.dir)));
-    else if (rm) mutate((d) => d.content[rm.dataset.remove].splice(Number(rm.dataset.i), 1));
-    else return;
-    textsView(view);
+    let prefer;
+    if (add) {
+      const key = add.dataset.add, n = (S.draft.content[key] || []).length;
+      mutate((d) => { d.content[key] = [...(d.content[key] || []), BLANK[key]()]; });
+      prefer = [`[data-bind^="content.${key}.${n}."]`];
+    } else if (mv) {
+      const key = mv.dataset.move, dir = mv.dataset.dir, to = Number(mv.dataset.i) + Number(dir);
+      mutate((d) => move(d.content[key], Number(mv.dataset.i), to));
+      prefer = [`[data-move="${key}"][data-i="${to}"][data-dir="${dir}"]`, `[data-move="${key}"][data-i="${to}"]:not([disabled])`];
+    } else if (rm) {
+      const key = rm.dataset.remove, i = Number(rm.dataset.i);
+      mutate((d) => d.content[key].splice(i, 1));
+      prefer = [`[data-remove="${key}"][data-i="${i}"]`, `[data-remove="${key}"][data-i="${i - 1}"]`, `[data-add="${key}"]`];
+    } else return;
+    // a lista é redesenhada: o foco volta para o controle equivalente em vez de cair no início da página
+    refocus(textsView(view), ...prefer);
   });
+  return pane;
 }
 
 export function settingsView(view) {

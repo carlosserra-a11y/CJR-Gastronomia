@@ -4,7 +4,7 @@
    rascunho; "Salvar e publicar" envia ao servidor.
    ============================================================ */
 import {
-  html, setHTML, S, mutate, field, area, choice, toggle, imageField, bindFields, bindImageFields,
+  html, setHTML, S, mutate, field, area, choice, toggle, imageField, bindFields, bindImageFields, refocus,
   openModal, confirmDialog, formValues, uniqueId,
 } from "./core.js";
 import { categoryIcon } from "../site/icons.js";
@@ -25,6 +25,12 @@ function parsePrice(v) {
 const rowButtons = (act, i, len, label) => html`
   <button type="button" class="icon-btn" data-act="${act}-up" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir ${label}">↑</button>
   <button type="button" class="icon-btn" data-act="${act}-down" data-i="${i}" ${i === len - 1 ? "disabled" : ""} aria-label="Descer ${label}">↓</button>`;
+
+/** Seletores do botão ↑/↓ na nova posição (o do mesmo sentido; se estiver desabilitado, o outro). */
+const moved = (act, to, extra = "") => {
+  const other = act.endsWith("-up") ? act.replace(/-up$/, "-down") : act.replace(/-down$/, "-up");
+  return [`[data-act="${act}"][data-i="${to}"]${extra}`, `[data-act="${other}"][data-i="${to}"]${extra}`];
+};
 
 /* ================= Lista de categorias ================= */
 
@@ -52,17 +58,20 @@ export function categoriesView(view) {
       </article>`)}
     </div>`);
   view.replaceChildren(pane);
-  bindFields(pane, { onChange: () => categoriesView(view) });
+  bindFields(pane, { onChange: (el) => refocus(categoriesView(view), `[data-bind="${el.dataset.bind}"]`) });
 
   pane.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-act]");
     if (!b) return;
     const i = Number(b.dataset.i);
-    if (b.dataset.act === "cat-up") mutate((d) => move(d.categories, i, i - 1));
-    if (b.dataset.act === "cat-down") mutate((d) => move(d.categories, i, i + 1));
-    if (b.dataset.act === "new-cat") return newCategory();
-    categoriesView(view);
+    const act = b.dataset.act;
+    if (act === "new-cat") return newCategory();
+    if (act !== "cat-up" && act !== "cat-down") return;
+    const to = act === "cat-up" ? i - 1 : i + 1;
+    mutate((d) => move(d.categories, i, to));
+    refocus(categoriesView(view), ...moved(act, to));
   });
+  return pane;
 }
 
 function newCategory() {
@@ -94,7 +103,7 @@ export function categoryEditor(view, id) {
   if (ci < 0) { location.hash = "#cardapio"; return; }
   const c = S.draft.categories[ci];
   const p = `categories.${ci}`;
-  const rerender = () => categoryEditor(view, id);
+  const rerender = (...prefer) => refocus(categoryEditor(view, id), ...prefer);
   const scroll = window.scrollY;
 
   const pane = document.createElement("div");
@@ -181,7 +190,7 @@ export function categoryEditor(view, id) {
   bindFields(pane, {
     onChange: (el) => {
       const b = el.dataset.bind;
-      if (el.dataset.type === "bool" || b.endsWith(".select") || b.endsWith(".icon")) rerender();
+      if (el.dataset.type === "bool" || b.endsWith(".select") || b.endsWith(".icon")) rerender(`[data-bind="${b}"]`);
     },
   });
 
@@ -191,34 +200,47 @@ export function categoryEditor(view, id) {
     const gi = Number(b.dataset.g), i = Number(b.dataset.i);
     const act = b.dataset.act;
     const group = (d) => d.categories[ci].groups[gi];
-    if (act === "group-up") mutate((d) => move(d.categories[ci].groups, i, i - 1));
-    else if (act === "group-down") mutate((d) => move(d.categories[ci].groups, i, i + 1));
-    else if (act === "item-up") mutate((d) => move(group(d).items, i, i - 1));
-    else if (act === "item-down") mutate((d) => move(group(d).items, i, i + 1));
-    else if (act === "add-group") {
+    const inGroup = `[data-g="${gi}"]`;
+    // depois de redesenhar, o foco volta ao controle equivalente (ver refocus)
+    let prefer = [];
+    if (act === "group-up" || act === "group-down") {
+      const to = act === "group-up" ? i - 1 : i + 1;
+      mutate((d) => move(d.categories[ci].groups, i, to));
+      prefer = moved(act, to);
+    } else if (act === "item-up" || act === "item-down") {
+      const to = act === "item-up" ? i - 1 : i + 1;
+      mutate((d) => move(group(d).items, i, to));
+      prefer = moved(act, to, inGroup);
+    } else if (act === "add-group") {
       const gid = uniqueId("Novo grupo", new Set(c.groups.map((g) => g.id)));
       mutate((d) => d.categories[ci].groups.push({ id: gid, name: "Novo grupo", note: "", active: true, items: [] }));
+      prefer = [`[data-bind="${p}.groups.${c.groups.length}.name"]`];
     } else if (act === "del-group") {
       const g = c.groups[i];
       if (!(await confirmDialog(`Excluir o grupo "${g.name}" e seus ${g.items.length} itens?`, { confirmLabel: "Excluir grupo" }))) return;
       mutate((d) => d.categories[ci].groups.splice(i, 1));
+      prefer = [`[data-act="del-group"][data-i="${i}"]`, `[data-act="del-group"][data-i="${i - 1}"]`, '[data-act="add-group"]'];
     } else if (act === "del-item") {
       const it = c.groups[gi].items[i];
       if (!(await confirmDialog(`Excluir "${it.name}"? Se quiser só esconder, use o botão Ativo/Oculto.`, { confirmLabel: "Excluir item" }))) return;
       mutate((d) => group(d).items.splice(i, 1));
-    } else if (act === "add-item") return itemModal(ci, gi, undefined, rerender);
-    else if (act === "edit-item") return itemModal(ci, gi, i, rerender);
-    else if (act === "add-preset") return presetModal(ci, undefined, rerender);
-    else if (act === "edit-preset") return presetModal(ci, i, rerender);
-    else if (act === "del-preset") mutate((d) => d.categories[ci].presets.splice(i, 1));
-    else if (act === "del-cat") {
+      prefer = [`[data-act="del-item"]${inGroup}[data-i="${i}"]`, `[data-act="del-item"]${inGroup}[data-i="${i - 1}"]`, `[data-act="add-item"]${inGroup}`];
+    } else if (act === "add-item") return itemModal(ci, gi, undefined, () => rerender(`[data-act="add-item"]${inGroup}`));
+    else if (act === "edit-item") return itemModal(ci, gi, i, () => rerender(`[data-act="edit-item"]${inGroup}[data-i="${i}"]`));
+    else if (act === "add-preset") return presetModal(ci, undefined, () => rerender('[data-act="add-preset"]'));
+    else if (act === "edit-preset") return presetModal(ci, i, () => rerender(`[data-act="edit-preset"][data-i="${i}"]`));
+    else if (act === "del-preset") {
+      mutate((d) => d.categories[ci].presets.splice(i, 1));
+      prefer = [`[data-act="del-preset"][data-i="${i}"]`, `[data-act="del-preset"][data-i="${i - 1}"]`, '[data-act="add-preset"]'];
+    } else if (act === "del-cat") {
       if (!(await confirmDialog(`Excluir a categoria "${c.name}" com todos os itens? A exclusão só vale depois de salvar.`, { confirmLabel: "Excluir categoria" }))) return;
       mutate((d) => d.categories.splice(ci, 1));
       location.hash = "#cardapio";
       return;
     } else return;
-    rerender();
+    rerender(...prefer);
   });
+  return pane;
 }
 
 /* ---------- Modal de item ---------- */

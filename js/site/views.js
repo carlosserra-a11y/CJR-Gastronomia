@@ -4,7 +4,8 @@
    ============================================================ */
 import { html, raw, paragraphs, pad2, splitWords, imgSrc } from "./util.js";
 import { categoryIcon, ui } from "./icons.js";
-import { priceLabel } from "../shared/menu.js";
+import { priceLabel, PORTFOLIO_CATEGORIES } from "../shared/menu.js";
+import { ringPicks } from "./portfolio.js";
 import { whatsappUrl, EVENT_TYPES, LIMITS, todayISO } from "../shared/quote.js";
 import * as store from "./store.js";
 
@@ -41,20 +42,36 @@ function categoryCard(cat, i) {
   </div>`;
 }
 
-function gallerySection(gallery) {
-  if (!gallery?.length) return "";
+function portfolioSection(c) {
+  const items = c.portfolio || [];
+  if (!items.length) return "";
+  const ring = ringPicks(items);
+  const counts = {};
+  items.forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
   return html`
-  <section class="gallery" id="galeria" aria-label="Galeria de eventos">
-    <div class="gallery-pin">
-      <header class="gallery-head"><p class="kicker">Galeria</p><h2 class="section-title">Momentos <em>servidos</em></h2></header>
-      <div class="gallery-track" id="galleryTrack">
-        ${gallery.map((g, i) => html`
-          <figure class="gallery-item" style="--i:${i}">
-            <div class="gallery-img"><img src="${imgSrc(g.image)}" alt="${g.caption || "Evento da CJR Gastronomia"}" loading="lazy" decoding="async"></div>
-            ${g.caption ? html`<figcaption>${g.caption}</figcaption>` : ""}
-          </figure>`)}
+  <section class="section portfolio" id="portfolio">
+    <header class="section-head">
+      <p class="kicker" data-reveal>Portfólio</p>
+      <h2 class="section-title" data-reveal>${splitWords(c.portfolioTitle || "Portfólio")}</h2>
+      <p class="section-lead" data-reveal>${c.portfolioIntro}</p>
+    </header>
+    ${ring.length >= 4 ? html`<div class="ring-stage" data-cursor="Arraste" data-no-ripple data-reveal>
+      <div class="ring" style="--n:${ring.length}">
+        ${ring.map((idx, i) => html`<button type="button" class="ring-card" data-index="${idx}" style="--i:${i}" aria-label="Ampliar: ${items[idx].caption || "foto do portfólio"}">
+          <img src="${imgSrc(items[idx].thumb || items[idx].image)}" alt="" loading="lazy" decoding="async" draggable="false"></button>`)}
       </div>
+      <div class="ring-ui">
+        <button type="button" class="ring-btn" data-ring="-1" aria-label="Girar para a esquerda">${ui.back}</button>
+        <span>Arraste para girar · toque para ampliar</span>
+        <button type="button" class="ring-btn" data-ring="1" aria-label="Girar para a direita">${ui.arrow}</button>
+      </div>
+    </div>` : ""}
+    <div class="pf-filters" role="group" aria-label="Filtrar o portfólio">
+      <button type="button" class="chip" data-filter="todos" aria-pressed="true">Todos <small>${items.length}</small></button>
+      ${Object.entries(PORTFOLIO_CATEGORIES).filter(([k]) => counts[k]).map(([k, label]) => html`
+        <button type="button" class="chip" data-filter="${k}" aria-pressed="false">${label} <small>${counts[k]}</small></button>`)}
     </div>
+    <div class="pf-grid"></div>
   </section>`;
 }
 
@@ -65,18 +82,24 @@ export function homeView(menu) {
   const marquee = [...events, ...events].map((e) => html`<span>${e}</span><i aria-hidden="true">✦</i>`);
   return html`
   <section class="hero" id="inicio">
-    <div class="hero-fronds" id="heroFronds" aria-hidden="true"></div>
-    ${c.heroImage ? html`<div class="hero-photo" data-speed="0.1" aria-hidden="true"><img src="${imgSrc(c.heroImage)}" alt="" fetchpriority="high" decoding="async"></div>` : ""}
-    <div class="hero-inner" id="heroInner">
-      <p class="kicker hero-kicker"><span class="kline" aria-hidden="true"></span>${c.heroKicker}</p>
-      <h1 class="hero-title">${splitWords(c.heroTitle)}</h1>
-      <p class="hero-text">${c.heroText}</p>
-      <div class="hero-ctas">
-        <a class="btn btn-gold magnetic" href="#/servicos"><span>Montar minha experiência</span>${ui.arrow}</a>
-        ${wa ? html`<a class="btn btn-ghost magnetic" href="${wa}" target="_blank" rel="noopener">${ui.whats}<span>Falar no WhatsApp</span></a>` : ""}
+    <canvas class="hero-3d" id="hero3d" aria-hidden="true"></canvas>
+    <div class="hero-grid">
+      <div class="hero-inner" id="heroInner">
+        <p class="kicker hero-kicker"><span class="kline" aria-hidden="true"></span>${c.heroKicker}</p>
+        <h1 class="hero-title">${splitWords(c.heroTitle)}</h1>
+        <p class="hero-text">${c.heroText}</p>
+        <div class="hero-ctas">
+          <a class="btn btn-gold magnetic" href="#/servicos"><span>Montar minha experiência</span>${ui.arrow}</a>
+          ${wa ? html`<a class="btn btn-ghost magnetic" href="${wa}" target="_blank" rel="noopener">${ui.whats}<span>Falar no WhatsApp</span></a>` : ""}
+        </div>
+        ${heroStats(c.chefStats)}
       </div>
+      ${c.heroImage ? html`
+      <figure class="hero-frame" id="heroFrame">
+        <div class="hero-frame-img"><img src="${imgSrc(c.heroImage)}" alt="Mesa de frios montada pelo Chef Carlos Jr" fetchpriority="high" decoding="async" data-speed="0.07"></div>
+        ${s.serviceArea ? html`<figcaption class="hero-badge">${ui.pin}<span>${s.serviceArea}</span></figcaption>` : ""}
+      </figure>` : ""}
     </div>
-    ${heroStats(c.chefStats)}
     <a class="scroll-cue" href="#/servicos" aria-label="Ver os serviços"><span>Role para descobrir</span><i aria-hidden="true"></i></a>
   </section>
 
@@ -93,6 +116,8 @@ export function homeView(menu) {
     </header>
     <div class="cat-grid">${menu.categories.map(categoryCard)}</div>
   </section>
+
+  ${portfolioSection(c)}
 
   <section class="section how" id="como-funciona">
     <div class="how-grid">
@@ -148,8 +173,6 @@ export function homeView(menu) {
       <p>Técnica, criatividade e <em>hospitalidade</em> — para transformar cada evento em uma experiência memorável.</p>
     </blockquote>
   </section>
-
-  ${gallerySection(c.gallery)}
 
   <section class="section cta" id="contato">
     <div class="cta-inner" data-reveal>
@@ -235,7 +258,7 @@ export function categoryView(menu, cat) {
           <div class="seg-opts">${cat.choice.options.map((o) => html`
             <label class="seg-opt"><input type="radio" name="choice-${cat.id}" value="${o}" data-choice="${cat.id}" ${choice === o ? "checked" : ""}><span>${o}</span></label>`)}</div>
         </fieldset>` : ""}
-      ${cat.presets?.length ? html`
+      ${cat.select === "many" && cat.presets?.length ? html`
         <div class="presets"><span class="presets-label">Seleções prontas</span>
           ${cat.presets.map((p) => html`<button type="button" class="chip" data-preset="${cat.id}" data-preset-id="${p.id}">${ui.plus}<span>${p.name}</span></button>`)}
         </div>` : ""}
@@ -423,7 +446,7 @@ export function footerView(menu) {
       <p>${menu.content.heroKicker}.${s.serviceArea ? ` ${s.serviceArea}.` : ""}</p>
     </div>
     <nav class="footer-nav" aria-label="Rodapé">
-      <a href="#/servicos">Serviços</a><a href="#/como-funciona">Como funciona</a><a href="#/chef">O Chef</a><a href="#/orcamento">Orçamento</a>
+      <a href="#/servicos">Serviços</a><a href="#/portfolio">Portfólio</a><a href="#/como-funciona">Como funciona</a><a href="#/chef">O Chef</a><a href="#/orcamento">Orçamento</a>
     </nav>
     <div class="footer-contact">
       ${wa ? html`<a href="${wa}" target="_blank" rel="noopener">${ui.whats}<span>WhatsApp</span></a>` : ""}

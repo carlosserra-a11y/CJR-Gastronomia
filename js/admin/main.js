@@ -49,7 +49,10 @@ function showAuth(needsSetup) {
 
 async function start(user) {
   me = user;
-  await loadMenu();
+  // Depois de uma sessão expirada, o rascunho não salvo continua valendo (não é substituído pelo servidor).
+  // Se outra pessoa publicou nesse meio-tempo, o "Salvar" avisa com o conflito (409).
+  if (S.draft && S.dirty) toast("Suas alterações não salvas foram mantidas.", "ok");
+  else await loadMenu();
   $("#auth").hidden = true;
   $("#app").hidden = false;
   $("#whoName").textContent = user.name || user.username;
@@ -69,17 +72,23 @@ async function route() {
   $("#side").classList.remove("open");
   $("#sideToggle").setAttribute("aria-expanded", "false");
   $("#viewTitle").textContent = key === "cardapio" && arg ? "Editar categoria" : TITLES[key];
+  // Cada tela é montada num contêiner novo e só entra na página se ainda for a rota atual
+  // (telas que buscam dados no servidor não podem "pintar por cima" de outra aberta depois).
+  const token = ++routeToken;
+  const target = document.createElement("div");
   try {
-    if (key === "inicio") await overviewView(view);
-    if (key === "cardapio") (arg ? categoryEditor(view, decodeURIComponent(arg)) : categoriesView(view));
-    if (key === "textos") textsView(view);
-    if (key === "contato") settingsView(view);
-    if (key === "historico") await historyView(view);
-    if (key === "conta") await accountView(view, me);
+    if (key === "inicio") await overviewView(target);
+    if (key === "cardapio") (arg ? categoryEditor(target, decodeURIComponent(arg)) : categoriesView(target));
+    if (key === "textos") textsView(target);
+    if (key === "contato") settingsView(target);
+    if (key === "historico") await historyView(target);
+    if (key === "conta") await accountView(target, me);
   } catch (ex) {
-    setHTML(view, html`<p class="err-box">${ex.message}</p>`);
+    setHTML(target, html`<p class="err-box">${ex.message}</p>`);
   }
+  if (token === routeToken) view.replaceChildren(target);
 }
+let routeToken = 0;
 
 /* ---------- Salvar / descartar ---------- */
 

@@ -42,7 +42,7 @@ export const setChoice = (state, categoryId, choice) => withEntry(state, categor
 
 /** Aplica uma seleção pronta (ex.: "Seleção Clássica"), respeitando o limite da categoria. */
 export function applyPreset(state, category, preset) {
-  const max = Number(category.maxPicks) || 0;
+  const max = category.select === "one" ? 1 : Number(category.maxPicks) || 0;
   const ids = max ? preset.itemIds.slice(0, max) : [...preset.itemIds];
   return withEntry(state, category.id, { ...entry(state, category.id), ids });
 }

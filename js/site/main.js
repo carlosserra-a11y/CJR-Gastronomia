@@ -5,9 +5,8 @@
    ============================================================ */
 import { $, $$, setHTML, toast } from "./util.js";
 import { initMotion, onFrame, motion, scan, scrollTo, measure } from "./motion.js";
-import { initHeroBackground } from "./hero-bg.js";
-import { mountFronds } from "./fronds.js";
 import { initCursor } from "./cursor.js";
+import { mountPortfolio } from "./portfolio.js";
 import { loadMenu } from "./api.js";
 import { indexMenu } from "../shared/menu.js";
 import * as store from "./store.js";
@@ -17,7 +16,7 @@ import { openLayer, closeLayer, closeAll } from "./dialog.js";
 
 const root = document.documentElement;
 const view = $("#view");
-const HOME_SECTIONS = new Set(["servicos", "como-funciona", "chef", "sobre", "contato", "galeria"]);
+const HOME_SECTIONS = new Set(["servicos", "portfolio", "como-funciona", "chef", "sobre", "contato"]);
 const LEAVE_MS = 320;
 const app = { menu: null, idx: null, route: null, key: "", cleanups: [] };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -26,8 +25,9 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 boot();
 
 async function boot() {
+  // Cada rota decide a própria rolagem; a restauração do navegador abriria a página no meio após recarregar.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   initMotion();
-  initHeroBackground($("#bg"));
   initCursor();
   bindGlobal();
   setHTML(view, V.loadingView());
@@ -49,8 +49,11 @@ async function boot() {
   store.onChange(syncSelection);
   window.addEventListener("hashchange", () => route());
   await intro;
-  await route({ first: true });
-  finishIntro();
+  try {
+    await route({ first: true });
+  } finally {
+    finishIntro(); // mesmo se a primeira tela falhar, a abertura nunca fica presa
+  }
 }
 
 function finishIntro() {
@@ -64,6 +67,8 @@ function finishIntro() {
 /* ---------------- Rotas ---------------- */
 
 function parse() {
+  // Âncoras comuns da página (ex.: "#main" do link de acessibilidade) não são rotas
+  if (location.hash && !location.hash.startsWith("#/")) return null;
   let h = location.hash.replace(/^#\/?/, "");
   try { h = decodeURIComponent(h); } catch { h = ""; } // endereço malformado (ex.: "#/%") vai para o início
   const [a, b] = h.split("/");
@@ -75,15 +80,24 @@ function parse() {
   return { name: "home" };
 }
 
+let navToken = 0;
+
 async function route({ first = false } = {}) {
   const r = parse();
+  if (!r) return;
+  const token = ++navToken; // a navegação mais recente sempre vence (ex.: clicar e voltar durante a transição)
   const key = `${r.name}:${r.id || ""}`;
   closeAll();
   if (key === app.key) { // mesma tela: só rola até a seção
+    view.classList.remove("is-leaving");
     scrollTo(r.section ? $(`#${r.section}`) : 0);
     return;
   }
-  if (!first && !motion.reduced) { view.classList.add("is-leaving"); await wait(LEAVE_MS); }
+  if (!first && !motion.reduced) {
+    view.classList.add("is-leaving");
+    await wait(LEAVE_MS);
+    if (token !== navToken) return;
+  }
   render(r);
   app.key = key;
   if (r.section) requestAnimationFrame(() => scrollTo($(`#${r.section}`), { immediate: first }));
@@ -108,7 +122,7 @@ function render(r) {
   }
   if (name === "home") {
     setHTML(view, V.homeView(app.menu));
-    app.cleanups.push(mountFronds($("#heroFronds")), homeEffects());
+    app.cleanups.push(mountHero3D(), mountPortfolio($("#portfolio"), app.menu.content.portfolio), homeEffects());
     document.title = `${brand} · ${app.menu.content.heroKicker}`;
   }
   if (name === "quote") {
@@ -132,6 +146,33 @@ function render(r) {
 
 /* ---------------- Efeitos da página inicial ---------------- */
 
+/** Objetos 3D do topo: o pacote three.js só é baixado quando a página inicial abre. */
+function mountHero3D() {
+  const canvas = $("#hero3d");
+  const hero = $(".hero");
+  if (!canvas || !hero || motion.reduced) return () => {};
+  let stop = () => {};
+  let dead = false;
+  import("./kitchen3d.js").then(({ mountKitchen }) => {
+    if (dead) return;
+    // mesmo ponto de quebra do CSS em que o topo vira uma coluna só (texto em cima, foto embaixo)
+    const scene = mountKitchen(canvas, { mobile: window.matchMedia("(max-width: 900px)").matches });
+    if (!scene) return;
+    const size = () => { const r = hero.getBoundingClientRect(); scene.resize(r.width, r.height); };
+    size();
+    const jump = (e) => { if (!e.target.closest("a, button")) scene.jump(); };
+    window.addEventListener("resize", size);
+    hero.addEventListener("pointerdown", jump);
+    canvas.classList.add("is-on");
+    const off = onFrame((m) => {
+      if (m.y > m.vh * 1.1) return; // fora da tela: não desenha
+      scene.render({ time: m.time, mx: m.mouse.sx, my: m.mouse.sy, scroll: m.y / m.vh, dt: m.dt });
+    });
+    stop = () => { off(); window.removeEventListener("resize", size); hero.removeEventListener("pointerdown", jump); scene.destroy(); };
+  }).catch(() => { /* sem WebGL: o topo continua com a foto */ });
+  return () => { dead = true; stop(); };
+}
+
 function animateCount(el) {
   const target = Number(el.dataset.count);
   if (!target || motion.reduced) return;
@@ -145,23 +186,17 @@ function animateCount(el) {
 }
 
 function homeEffects() {
-  const heroParts = [$("#heroInner"), $(".hero-stats")].filter(Boolean);
+  const heroParts = [$("#heroInner")].filter(Boolean);
+  const stacked = window.matchMedia("(max-width: 900px)"); // topo em uma coluna: a foto vem logo abaixo do texto
   const marquee = $("#marquee");
   const steps = $("#howSteps");
   const stepItems = $$(".how-step");
   const bar = $("#howBar");
-  const gallery = $(".gallery");
-  const track = $("#galleryTrack");
   let mx = 0;
   let half = marquee ? marquee.scrollWidth / 2 : 0;
-  let extra = 0;
 
   const size = () => {
     half = marquee ? marquee.scrollWidth / 2 : 0;
-    if (gallery && track) {
-      extra = Math.max(0, track.scrollWidth - window.innerWidth + 64);
-      gallery.style.height = `${window.innerHeight + extra}px`;
-    }
     measure();
   };
   size();
@@ -175,8 +210,10 @@ function homeEffects() {
 
   const stop = onFrame((m) => {
     if (m.y < m.vh * 1.2 && !m.reduced) {
-      const transform = `translate3d(0, ${(m.y * 0.38).toFixed(1)}px, 0)`;
-      const opacity = Math.max(0, 1 - m.y / (m.vh * 0.72)).toFixed(3);
+      // empilhado, o texto descendo mais devagar ficaria por baixo da foto: lá ele rola normalmente
+      const lag = stacked.matches ? 0 : m.y * 0.38;
+      const transform = `translate3d(0, ${lag.toFixed(1)}px, 0)`;
+      const opacity = stacked.matches ? "1" : Math.max(0, 1 - m.y / (m.vh * 0.72)).toFixed(3);
       for (const el of heroParts) { el.style.transform = transform; el.style.opacity = opacity; }
     }
     if (marquee && half && !m.reduced) {
@@ -193,13 +230,6 @@ function homeEffects() {
           const b = st.getBoundingClientRect();
           st.classList.toggle("is-active", b.top < m.vh * 0.62 && b.bottom > m.vh * 0.2);
         }
-      }
-    }
-    if (gallery && extra) {
-      const r = gallery.getBoundingClientRect();
-      if (r.top < m.vh && r.bottom > 0) {
-        const p = clamp(-r.top / (r.height - m.vh), 0, 1);
-        track.style.transform = `translate3d(${(-p * extra).toFixed(1)}px, 0, 0)`;
       }
     }
   });
@@ -258,6 +288,12 @@ function bindGlobal() {
   drawer.addEventListener("click", (e) => { if (e.target.closest("a")) closeLayer(drawer); });
 
   document.addEventListener("click", (e) => {
+    if (e.target.closest(".skip")) { // acessibilidade: pula para o conteúdo sem trocar de tela
+      e.preventDefault();
+      $("#main").focus({ preventScroll: true });
+      scrollTo($("#main"), { offset: 0 });
+      return;
+    }
     const pick = e.target.closest("[data-pick]");
     if (pick) {
       const err = store.toggle(pick.dataset.pick, pick.dataset.item);
@@ -276,7 +312,16 @@ function bindGlobal() {
       return;
     }
     const rm = e.target.closest("[data-remove]");
-    if (rm) { store.remove(rm.dataset.remove, rm.dataset.item); return; }
+    if (rm) {
+      const box = rm.closest("#summary");
+      const pos = box ? $$("[data-remove]", box).indexOf(rm) : -1;
+      store.remove(rm.dataset.remove, rm.dataset.item);
+      if (box) { // o resumo foi redesenhado: o foco segue para o item seguinte (ou para o link de adicionar)
+        const left = $$("[data-remove]", box);
+        (left[Math.min(pos, left.length - 1)] || $("a", box))?.focus({ preventScroll: true });
+      }
+      return;
+    }
     if (e.target.closest("[data-clear]")) {
       if (window.confirm("Limpar toda a seleção?")) store.clearAll();
       return;

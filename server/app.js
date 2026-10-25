@@ -59,11 +59,13 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   pub.get("/health", (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
   pub.get("/menu", (req, res) => {
     const { version, menu } = store.currentMenu();
-    const etag = `W/"v${version}"`;
+    const body = JSON.stringify({ version, ...publicView(menu) });
+    // O hash entra no ETag porque um banco recriado recomeça na versão 1 e o navegador reaproveitaria o cardápio antigo.
+    const etag = `W/"v${version}-${sha256(body).slice(0, 16)}"`;
     res.set("Cache-Control", "no-cache");
     res.set("ETag", etag);
     if (req.get("if-none-match") === etag) return res.status(304).end();
-    res.json({ version, ...publicView(menu) });
+    res.type("application/json").send(body);
   });
   app.use("/api", pub);
 
