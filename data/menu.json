@@ -14,7 +14,7 @@
     "heroKicker": "Alta gastronomia itinerante para eventos",
     "heroTitle": "A cozinha do Chef, servida no seu evento",
     "heroText": "Coffee breaks, mesas de frios, finger foods, buffets e estações ao vivo, planejados sob medida pelo Chef Carlos Junior para eventos sociais e corporativos em Florianópolis e região.",
-    "heroImage": "assets/img/portfolio/mesa-01.webp",
+    "heroImage": "assets/img/chef-hero.webp",
     "eventTypes": [
       "Formaturas",
       "Eventos corporativos",
@@ -53,7 +53,7 @@
     ],
     "chefTitle": "Chef Carlos Junior",
     "chefText": "À frente da CJR Gastronomia, o Chef Carlos Junior reúne 8 anos de formação em Gastronomia e uma trajetória de 12 anos de experiência profissional no setor. Graduado em Gastronomia pela PUCRS e com pós-graduação em Gastronomia Contemporânea, construiu sua carreira em diferentes cozinhas, restaurantes e experiências gastronômicas, desenvolvendo um olhar apurado para técnicas, sabores, apresentação e excelência no serviço.\n\nSeu trabalho é guiado pela combinação entre técnica, criatividade e hospitalidade, com o propósito de transformar cada evento em uma experiência gastronômica memorável — da escolha dos ingredientes à apresentação dos pratos, do planejamento à experiência dos convidados.",
-    "chefImage": "assets/img/chef-carlos.webp",
+    "chefImage": "assets/img/chef-servico.webp",
     "chefStats": [
       {
         "value": "12",

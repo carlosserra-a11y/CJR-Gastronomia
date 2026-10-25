@@ -106,7 +106,7 @@ export function homeView(menu) {
       </div>
       ${c.heroImage ? html`
       <figure class="hero-frame" id="heroFrame">
-        <div class="hero-frame-img"><img src="${imgSrc(c.heroImage)}" alt="Mesa de frios montada pelo Chef Carlos Jr" fetchpriority="high" decoding="async" data-speed="0.07"></div>
+        <div class="hero-frame-img"><img src="${imgSrc(c.heroImage)}" alt="Chef Carlos Jr, de dólmã branco" fetchpriority="high" decoding="async" data-speed="0.07"></div>
         ${s.serviceArea ? html`<figcaption class="hero-badge">${ui.pin}<span>${s.serviceArea}</span></figcaption>` : ""}
       </figure>` : ""}
     </div>
