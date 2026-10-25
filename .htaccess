@@ -1,0 +1,30 @@
+# CJR Gastronomia — segurança na hospedagem Apache/LiteSpeed (Hostinger).
+# Vale para a versão estática do site; o servidor Node.js já envia estes cabeçalhos sozinho.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # sempre HTTPS
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # pastas internas do projeto nunca são servidas
+  RewriteRule ^(server|tests|src|node_modules|scripts|[.]git|[.]claude)(/|$) - [F,L]
+</IfModule>
+
+# arquivos de configuração e documentação do projeto
+<FilesMatch "^(package(-lock)?[.]json|README[.]md|[.]gitignore|[.]nojekyll|[.]env.*)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always unset X-Powered-By
+</IfModule>

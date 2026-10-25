@@ -226,3 +226,33 @@ test("login errado é recusado e sair encerra a sessão", async () => {
   await call("POST", "/api/admin/logout", {});
   assert.equal((await call("GET", "/api/admin/menu")).status, 401);
 });
+
+/* ---------- Segurança extra ---------- */
+
+test("cabeçalhos reforçados: sem embutir o site, sem vazar recursos e painel fora dos buscadores", async () => {
+  const res = await fetch(base + "/");
+  assert.equal(res.headers.get("x-frame-options"), "DENY");
+  assert.equal(res.headers.get("cross-origin-resource-policy"), "same-origin");
+  assert.match(res.headers.get("content-security-policy"), /frame-ancestors .none./);
+  assert.match(res.headers.get("content-security-policy"), /object-src .none./);
+  assert.equal(res.headers.get("x-powered-by"), null);
+  const api = await fetch(base + "/api/menu");
+  assert.match(api.headers.get("x-robots-tag"), /noindex/);
+  const txt = await fetch(base + "/.well-known/security.txt");
+  assert.equal(txt.status, 200);
+  assert.match(await txt.text(), /Contact:/);
+});
+
+test("pedido ao painel vindo de outro site é bloqueado, mesmo com o cabeçalho anti-CSRF", async () => {
+  const evil = await call("POST", "/api/admin/login", { username: "chef", password: "Cozinha2026" }, { Origin: "https://site-malicioso.example" });
+  assert.equal(evil.status, 403);
+  const cross = await call("POST", "/api/admin/login", { username: "chef", password: "Cozinha2026" }, { "Sec-Fetch-Site": "cross-site" });
+  assert.equal(cross.status, 403);
+});
+
+test("senhas novas precisam de 10 caracteres e não podem ser comuns", async () => {
+  const { passwordProblems } = await import("../server/security.js");
+  assert.ok(passwordProblems("Cozinha26").some((p) => p.includes("10 caracteres")));
+  assert.ok(passwordProblems("chefcarlos123").some((p) => p.includes("comum")));
+  assert.deepEqual(passwordProblems("Cozinha-do-Chef-2026"), []);
+});

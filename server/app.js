@@ -12,7 +12,7 @@ import { openDatabase } from "./db.js";
 import * as V from "./validate.js";
 import {
   hashPassword, verifyPassword, DUMMY_HASH, passwordProblems, newToken, sha256,
-  parseCookies, sessionCookie, SESSION_COOKIE, SESSION_TTL_MS, CSRF_HEADER_VALUE, rateLimiter, securityHeaders,
+  parseCookies, sessionCookie, sessionCookieName, SESSION_TTL_MS, SESSION_MAX_MS, CSRF_HEADER_VALUE, rateLimiter, securityHeaders,
 } from "./security.js";
 import { publicView, diffMenus } from "../js/shared/menu.js";
 
@@ -50,7 +50,7 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   const app = express();
   app.disable("x-powered-by");
   if (trustProxy) app.set("trust proxy", trustProxy === true ? 1 : trustProxy);
-  app.use(securityHeaders);
+  app.use(securityHeaders({ hsts: secureCookies }));
   app.use(compression());
 
   /* ---------------- Arquivos estáticos (lista branca) ---------------- */
@@ -61,6 +61,9 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   app.get("/admin", (req, res, next) => (req.originalUrl.split("?")[0].endsWith("/") ? next() : res.redirect(302, "/admin/")));
   app.use("/admin", express.static(join(ROOT, "admin"), { ...staticOpts(0), index: "index.html" }));
   app.get("/robots.txt", (req, res) => res.sendFile(join(ROOT, "robots.txt")));
+  app.get("/.well-known/security.txt", (req, res) => res.type("text/plain").sendFile(join(ROOT, ".well-known", "security.txt"), { dotfiles: "allow" }));
+  // painel e API fora dos buscadores
+  app.use(["/admin", "/api"], (req, res, next) => { res.set("X-Robots-Tag", "noindex, nofollow"); next(); });
   app.get("/favicon.ico", (req, res) => res.sendFile(join(ROOT, "assets", "img", "favicon.svg")));
   app.get(["/", "/index.html"], (req, res) => res.sendFile(join(ROOT, "index.html")));
 
@@ -71,11 +74,21 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   const limits = {
     login: rateLimiter({ windowMs: 15 * 60_000, max: 20 }),
     loginUser: rateLimiter({ windowMs: 15 * 60_000, max: 8 }),
+    api: rateLimiter({ windowMs: 60_000, max: 300 }), // por IP, para toda a API
+    password: rateLimiter({ windowMs: 15 * 60_000, max: 10 }), // troca de senha, por usuário
+    upload: rateLimiter({ windowMs: 60 * 60_000, max: 80 }), // fotos por hora, por usuário (não deixa encher o disco)
+    backup: rateLimiter({ windowMs: 60 * 60_000, max: 6 }),
   };
+  const limited = (limiter, keyOf) => (req, res, next) => {
+    const r = limiter.take(keyOf(req));
+    return r.ok ? next() : tooMany(res, r.retryAfter);
+  };
+  const COOKIE = sessionCookieName(secureCookies);
 
   /* ================================================================
      API PÚBLICA
      ================================================================ */
+  app.use("/api", limited(limits.api, ip));
   const pub = express.Router();
   pub.get("/health", (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
   pub.get("/menu", (req, res) => {
@@ -100,6 +113,15 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   adm.use((req, res, next) => {
     if (req.method === "GET" || req.method === "HEAD") return next();
     if (req.get("x-requested-with") !== CSRF_HEADER_VALUE) return res.status(403).json({ error: "Requisição bloqueada." });
+    // reforço: navegadores informam de onde vem a requisição; de outro site, bloqueia
+    const site = req.get("sec-fetch-site");
+    if (site && site !== "same-origin" && site !== "none") return res.status(403).json({ error: "Requisição bloqueada." });
+    const origin = req.get("origin");
+    if (origin) {
+      let host = "";
+      try { host = new URL(origin).host; } catch { /* origem malformada */ }
+      if (host !== req.get("host")) return res.status(403).json({ error: "Requisição bloqueada." });
+    }
     next();
   });
 
@@ -109,11 +131,12 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
 
   // Sessão
   adm.use((req, res, next) => {
-    const token = parseCookies(req.get("cookie"))[SESSION_COOKIE];
+    const token = parseCookies(req.get("cookie"))[COOKIE];
     if (!token) return next();
     const sid = sha256(token);
     const s = store.getSession(sid);
-    if (!s || !s.active || new Date(s.expires_at) < new Date()) {
+    const tooOld = s && Date.now() - Date.parse(s.created_at) > SESSION_MAX_MS; // prazo máximo, mesmo com uso
+    if (!s || !s.active || tooOld || new Date(s.expires_at) < new Date()) {
       if (s) store.deleteSession(sid);
       return next();
     }
@@ -193,7 +216,7 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   adm.use(requireAuth);
 
   /* ---------- Conta / usuários ---------- */
-  adm.post("/password", wrap(async (req, res) => {
+  adm.post("/password", limited(limits.password, (req) => `u${req.user.id}`), wrap(async (req, res) => {
     const user = store.findUser(req.user.id);
     if (!(await verifyPassword(req.body?.current || "", user.password_hash))) return res.status(400).json({ error: "Senha atual incorreta.", field: "current" });
     const problems = passwordProblems(req.body?.next, user.username);
@@ -269,7 +292,7 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
   });
 
   /* ---------- Upload de fotos ---------- */
-  adm.post("/upload", express.json({ limit: "8mb" }), (req, res) => {
+  adm.post("/upload", limited(limits.upload, (req) => `u${req.user.id}`), express.json({ limit: "8mb" }), (req, res) => {
     const m = /^data:image\/(webp|jpeg|png);base64,([A-Za-z0-9+/=]+)$/.exec(String(req.body?.dataUrl || ""));
     if (!m) return res.status(400).json({ error: "Envie uma imagem JPG, PNG ou WEBP." });
     const buf = Buffer.from(m[2], "base64");
@@ -294,7 +317,7 @@ export function createApp({ dataDir, setupCode = null, trustProxy = false, secur
     res.set("Content-Disposition", 'attachment; filename="menu.json"').type("application/json").send(JSON.stringify(menu, null, 2) + "\n");
   });
 
-  adm.get("/backup", (req, res) => {
+  adm.get("/backup", limited(limits.backup, (req) => `u${req.user.id}`), (req, res) => {
     const file = join(dataDir, `backup-${Date.now()}.db`);
     store.db.exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`);
     audit(req, "baixou_backup");

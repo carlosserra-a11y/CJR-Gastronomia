@@ -105,7 +105,7 @@ function createApi(db) {
 
   const createSession = ({ id, userId, expiresAt, ip, userAgent }) =>
     db.prepare("INSERT INTO sessions (id, user_id, created_at, expires_at, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)").run(id, userId, now(), expiresAt, ip || "", (userAgent || "").slice(0, 200));
-  const getSession = (id) => db.prepare(`SELECT s.id, s.expires_at, u.id AS user_id, u.username, u.name, u.active
+  const getSession = (id) => db.prepare(`SELECT s.id, s.created_at, s.expires_at, u.id AS user_id, u.username, u.name, u.active
       FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ?`).get(id);
   const extendSession = (id, expiresAt) => db.prepare("UPDATE sessions SET expires_at = ? WHERE id = ?").run(expiresAt, id);
   const deleteSession = (id) => db.prepare("DELETE FROM sessions WHERE id = ?").run(id);

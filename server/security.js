@@ -9,7 +9,10 @@ const scryptAsync = promisify(scrypt);
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
 
 export const SESSION_COOKIE = "cjr_session";
-export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias, renovada com o uso
+/** Em HTTPS o cookie usa o prefixo __Host-: só vale neste domínio exato (subdomínios não conseguem sobrescrevê-lo). */
+export const sessionCookieName = (secure) => (secure ? `__Host-${SESSION_COOKIE}` : SESSION_COOKIE);
+export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias sem uso, renovada com o uso
+export const SESSION_MAX_MS = 30 * 24 * 60 * 60 * 1000; // e no máximo 30 dias desde o login, mesmo com uso
 export const CSRF_HEADER_VALUE = "cjr-admin";
 
 export async function hashPassword(password) {
@@ -29,14 +32,20 @@ export async function verifyPassword(password, stored) {
 /** Hash usado para comparar senhas de usuários inexistentes (não revela quais usuários existem pelo tempo de resposta). */
 export const DUMMY_HASH = "scrypt$16384$8$1$AAAAAAAAAAAAAAAAAAAAAA==$" + Buffer.alloc(64).toString("base64");
 
+const COMMON_PASSWORDS = new Set([
+  "12345678", "123456789", "1234567890", "senha123", "senha1234", "senha12345", "password1", "password123", "qwerty123",
+  "abc123456", "admin123", "admin1234", "mudar123", "cjr12345", "cjr123456", "gastronomia1", "gastronomia123", "chef123456",
+  "chefcarlos1", "chefcarlos123", "carlos1234", "carlos12345", "cozinha123", "buffet1234", "brasil2026", "florianopolis1",
+]);
+
 export function passwordProblems(password, username = "") {
   const p = String(password || "");
   const problems = [];
-  if (p.length < 8) problems.push("ter pelo menos 8 caracteres");
+  if (p.length < 10) problems.push("ter pelo menos 10 caracteres");
   if (p.length > 200) problems.push("ter no máximo 200 caracteres");
   if (!/[A-Za-zÀ-ÿ]/.test(p) || !/\d/.test(p)) problems.push("misturar letras e números");
   if (username && p.toLowerCase().includes(String(username).toLowerCase())) problems.push("não conter o nome de usuário");
-  if (/^(12345678|senha123|password1|cjr12345|gastronomia1)$/i.test(p)) problems.push("não ser uma senha comum");
+  if (COMMON_PASSWORDS.has(p.toLowerCase())) problems.push("não ser uma senha comum");
   return problems;
 }
 
@@ -63,7 +72,7 @@ export function parseCookies(header = "") {
 }
 
 export function sessionCookie(token, { secure, maxAgeMs }) {
-  const parts = [`${SESSION_COOKIE}=${token}`, "Path=/", "HttpOnly", "SameSite=Strict", `Max-Age=${Math.floor(maxAgeMs / 1000)}`];
+  const parts = [`${sessionCookieName(secure)}=${token}`, "Path=/", "HttpOnly", "SameSite=Strict", `Max-Age=${Math.floor(maxAgeMs / 1000)}`];
   if (secure) parts.push("Secure");
   return parts.join("; ");
 }
@@ -87,22 +96,43 @@ export function rateLimiter({ windowMs, max }) {
   };
 }
 
-export function securityHeaders(req, res, next) {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-  res.setHeader("Content-Security-Policy", [
+/** Política de conteúdo do site: só scripts próprios, nada embutido em outros sites, sem plugins. */
+export function contentSecurityPolicy({ https = false } = {}) {
+  return [
     "default-src 'self'",
     "script-src 'self'",
+    // folhas de estilo só do site e do Google Fonts; atributos style="" (variáveis CSS das animações) liberados
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "style-src-elem 'self' https://fonts.googleapis.com",
+    "style-src-attr 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
+    "media-src 'self'",
     "connect-src 'self'",
+    "manifest-src 'self'",
+    "frame-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-  ].join("; "));
-  next();
+    ...(https ? ["upgrade-insecure-requests"] : []),
+  ].join("; ");
+}
+
+/** Cabeçalhos de segurança. Com `hsts`, o navegador passa a usar só HTTPS neste domínio por 2 anos. */
+export function securityHeaders({ hsts = false } = {}) {
+  return (req, res, next) => {
+    const https = hsts || req.secure;
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+    res.setHeader("Origin-Agent-Cluster", "?1");
+    res.setHeader("Content-Security-Policy", contentSecurityPolicy({ https }));
+    if (https) res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+    next();
+  };
 }
