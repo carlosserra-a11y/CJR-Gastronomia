@@ -91,7 +91,8 @@ export function textsView(view) {
       ${area("Texto", "content.portfolioIntro", { rows: 2, max: 400 })}
       ${repeater("portfolio", "Fotos", c.portfolio || [], (p, i) => html`
         ${imageField(`Foto ${i + 1}`, `content.portfolio.${i}.image`)}
-        <div class="grid-2">${choice("Categoria (filtro)", `content.portfolio.${i}.category`, CATEGORY_OPTIONS)}${field("Legenda", `content.portfolio.${i}.caption`, { max: 120 })}</div>`, { addLabel: "+ Foto", max: MAX.portfolio })}
+        <div class="grid-2">${choice("Categoria (filtro)", `content.portfolio.${i}.category`, CATEGORY_OPTIONS)}${field("Legenda", `content.portfolio.${i}.caption`, { max: 120 })}</div>
+        <label class="check"><input type="checkbox" data-bind="content.portfolio.${i}.featured" data-type="bool" ${p.featured ? "checked" : ""}> Destaque no carrossel (com 4 ou mais marcadas, o carrossel mostra só as marcadas)</label>`, { addLabel: "+ Foto", max: MAX.portfolio })}
     </section>
 
     <section class="panel">

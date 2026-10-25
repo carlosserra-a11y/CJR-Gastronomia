@@ -290,3 +290,15 @@ test("estatísticas: o site registra ações anônimas e o painel mostra o relat
   assert.equal(r.data.sources[0].id, "instagram");
   assert.equal(r.data.recentLeads[0].et, "Corporativo");
 });
+
+test("portfólio: destaque no carrossel só fica gravado quando marcado", () => {
+  const raw = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
+  raw.content.portfolio = [
+    { image: "assets/img/portfolio/evento-01.webp", caption: "", featured: true },
+    { image: "assets/img/portfolio/evento-02.webp", caption: "", featured: "sim" },
+    { image: "assets/img/portfolio/evento-03.webp", caption: "", featured: false },
+  ];
+  const clean = menuDoc(raw).content.portfolio;
+  assert.equal(clean[0].featured, true);
+  assert.ok(!("featured" in clean[1]) && !("featured" in clean[2]));
+});

@@ -11,13 +11,16 @@ import { openLightbox } from "./lightbox.js";
 import { PORTFOLIO_CATEGORIES } from "../shared/menu.js";
 
 const RING_SIZE = 12;
+const RING_FEATURED_MAX = 16;
 const DRAG_THRESHOLD = 6; // px: abaixo disso o gesto conta como toque, não como arrasto
 const COLUMN_SHIFT = [0, 70, 32]; // deslocamento máximo (px) de cada coluna da grade
 const TILE_GAP = 16;
 const pageSize = () => (window.innerWidth < 760 ? 8 : 12);
 
-/** Fotos em destaque no anel: alterna as categorias para variar. */
+/** Fotos do anel: as marcadas como destaque no painel; sem destaques, alterna as categorias para variar. */
 export function ringPicks(items) {
+  const featured = items.map((p, i) => (p.featured ? i : -1)).filter((i) => i >= 0);
+  if (featured.length >= 4) return featured.slice(0, RING_FEATURED_MAX);
   const byCat = new Map();
   items.forEach((p, i) => { if (!byCat.has(p.category)) byCat.set(p.category, []); byCat.get(p.category).push(i); });
   const out = [];

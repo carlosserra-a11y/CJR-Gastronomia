@@ -115,6 +115,7 @@ function content(input) {
       // hasOwn converte a chave para texto: sem o typeof, ["mesa"] passaria e a foto sumiria dos filtros
       category: typeof p?.category === "string" && Object.hasOwn(PORTFOLIO_CATEGORIES, p.category) ? p.category : "eventos",
       caption: str(p?.caption, { field: `Portfólio — legenda ${i + 1}`, max: 120 }),
+      ...(p?.featured === true ? { featured: true } : {}), // aparece no carrossel do portfólio
     };
   }).filter((p) => p.image);
   const calcIds = new Set();

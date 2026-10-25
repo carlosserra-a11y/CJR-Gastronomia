@@ -77,6 +77,123 @@
     "portfolioIntro": "Eventos reais preparados pelo Chef Carlos Junior e equipe: mesas de frios, coffee breaks, buffets, doces e os bastidores da cozinha.",
     "portfolio": [
       {
+        "image": "assets/img/portfolio/evento-01.webp",
+        "thumb": "assets/img/portfolio/evento-01-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "coffee",
+        "caption": "Salgados crocantes servidos com efeito de gelo seco",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-02.webp",
+        "thumb": "assets/img/portfolio/evento-02-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "doces",
+        "caption": "Brownies com morango e efeito de gelo seco",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-03.webp",
+        "thumb": "assets/img/portfolio/evento-03-sm.webp",
+        "w": 760,
+        "h": 1140,
+        "category": "eventos",
+        "caption": "Chef Carlos Jr com os pratos de churrasco",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-04.webp",
+        "thumb": "assets/img/portfolio/evento-04-sm.webp",
+        "w": 760,
+        "h": 507,
+        "category": "pratos",
+        "caption": "Pratos de churrasco com pão de alho prontos para servir",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-05.webp",
+        "thumb": "assets/img/portfolio/evento-05-sm.webp",
+        "w": 760,
+        "h": 507,
+        "category": "eventos",
+        "caption": "Equipe montando os pratos na cozinha",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-06.webp",
+        "thumb": "assets/img/portfolio/evento-06-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "mesa",
+        "caption": "Mesa de frios, pães e doces em evento corporativo",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-07.webp",
+        "thumb": "assets/img/portfolio/evento-07-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "mesa",
+        "caption": "Mesa de frios com queijos, embutidos e pães artesanais",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-08.webp",
+        "thumb": "assets/img/portfolio/evento-08-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "mesa",
+        "caption": "Tábua de queijos, salames e uvas",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-09.webp",
+        "thumb": "assets/img/portfolio/evento-09-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "pratos",
+        "caption": "Filé ao molho de vinho tinto com risoto",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-10.webp",
+        "thumb": "assets/img/portfolio/evento-10-sm.webp",
+        "w": 760,
+        "h": 427,
+        "category": "pratos",
+        "caption": "Salada Caesar e salada de folhas com manga",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-11.webp",
+        "thumb": "assets/img/portfolio/evento-11-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "mesa",
+        "caption": "Tábua de frios com gorgonzola, presunto cru e frutas",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-12.webp",
+        "thumb": "assets/img/portfolio/evento-12-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "mesa",
+        "caption": "Mesa completa com frios, mini sanduíches, doces e bolo",
+        "featured": true
+      },
+      {
+        "image": "assets/img/portfolio/evento-13.webp",
+        "thumb": "assets/img/portfolio/evento-13-sm.webp",
+        "w": 760,
+        "h": 1351,
+        "category": "doces",
+        "caption": "Torta mousse de chocolate com frutas vermelhas",
+        "featured": true
+      },
+      {
         "image": "assets/img/portfolio/mesa-01.webp",
         "thumb": "assets/img/portfolio/mesa-01-sm.webp",
         "w": 760,
