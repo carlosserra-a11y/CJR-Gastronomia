@@ -4,10 +4,14 @@ Cardápio virtual da **CJR Gastronomia** (alta gastronomia itinerante para event
 
 - **Visual "cozinha do chef"**: fundo claro de linho e mármore, grafite, cobre das panelas e inox nos detalhes; serifa clássica (Cormorant Garamond) + Manrope; logo oficial em assinatura.
 - **Objetos 3D no topo** (three.js): faca, garfo, colher, tomates, manjericão, alecrim, limão e grãos de pimenta e sal em inox e materiais realistas. Giram com o mouse, se espalham ao rolar e "pulam" com um toque. No celular ficam só nas bordas, para não cobrir o texto. O pacote 3D só é baixado na página inicial e não roda com "reduzir movimento".
-- **Portfólio interativo** com as fotos reais dos eventos: anel 3D que gira sozinho, com a rolagem e ao arrastar; grade com filtros por categoria e colunas em paralaxe; visualizador em tela cheia com setas, teclado e deslizar no celular.
+- **Portfólio interativo** com 59 fotos reais (Drive + Instagram do Chef): anel 3D que gira sozinho, com a rolagem e ao arrastar; grade com filtros, "ver mais", "Surpreenda-me" e cartões que inclinam com o mouse; visualizador em tela cheia com troca automática, toque nas laterais, arrastar para baixo para fechar e botão "Quero algo assim" (WhatsApp).
+- **Calculadora de convidados**: número de convidados, perfil do evento (leve, normal, farto) e o que servir (coffee, mesa de frios, finger food, buffet de risoto, sobremesas) → gramas por pessoa, quantidade total e **faixa de valor aproximada**, com envio da simulação pelo WhatsApp. Gramas e valores de referência são editáveis no painel.
+- **Avaliações de clientes**: nota e total no Google com link para ler todas, destaques e carrossel de depoimentos (cadastrados pela equipe no painel, com autorização dos clientes).
+- **Botão do WhatsApp sempre no canto direito**, em todas as telas (sobe quando a barra de seleção aparece no celular).
+- **Pensado para o celular primeiro**: alvos de toque grandes, resumo fixo da calculadora, carrosséis que deslizam no dedo.
 - **Paralaxe na rolagem**: rolagem suave (Lenis), títulos que entram palavra por palavra, cartões em colunas com velocidades diferentes, faixa de eventos que acelera com a rolagem, "Como funciona" com passos que acendem e textos gigantes vazados ao fundo.
 - **Cardápio completo do briefing**: Coffee Corporativo, Mesa de Frios, Finger Foods (7 grupos), 6 Buffets, Sobremesas (com seleções prontas), Buffet de Risotos (com escolha de formato), Cook Show e "Aumente sua Experiência" (ativações).
-- **Monte sua experiência**: o cliente marca pacotes e itens (fica salvo no aparelho), preenche o formulário do evento e o site abre o **WhatsApp com a mensagem organizada**. **Nenhum preço final é calculado** (como pede o briefing).
+- **Monte sua experiência**: o cliente marca pacotes e itens (fica salvo no aparelho), preenche o formulário do evento e o site abre o **WhatsApp com a mensagem organizada**. **Nenhum preço final é calculado** (como pede o briefing): a calculadora mostra só uma faixa aproximada, e o orçamento é sempre feito pela equipe.
 - **Painel da equipe** (`/admin/`): editar categorias, pacotes, itens, preços de referência, disponibilidade, fotos e todos os textos, ativar/desativar sem apagar, ordem, **histórico de versões com "restaurar"** e contas da equipe.
 - Acessível (contraste, foco visível, teclado, "reduzir movimento" desliga as animações) e responsivo (celular, tablet e computador).
 - **Contato do Chef**: WhatsApp (48) 99683-5439 · Instagram [@chefcarlosjr_gastronomia](https://www.instagram.com/chefcarlosjr_gastronomia/) · Florianópolis e região. Tudo editável no painel.
@@ -45,6 +49,8 @@ Na primeira vez que o servidor liga, o terminal mostra um **código de configura
 | Mostrar "a partir de R$ …" no site | **Contato e configurações** → Preços (desligado por padrão) |
 | Trocar textos do topo, do Chef, "Como funciona", aviso de privacidade | **Textos do site** |
 | Adicionar, reordenar ou tirar **fotos do portfólio** (com categoria e legenda) | **Textos do site** → Portfólio |
+| Ajustar **gramas por pessoa e valores aproximados** da calculadora | **Textos do site** → Calculadora de convidados |
+| Atualizar **nota/total do Google** ou cadastrar **depoimentos** | **Textos do site** → Avaliações de clientes |
 | Desfazer uma alteração | **Histórico** → Restaurar |
 | Ver o que falta antes de divulgar | **Visão geral** (lista de pendências) |
 
@@ -74,6 +80,7 @@ Já está publicado em `https://carlosserra-a11y.github.io/CJR-Gastronomia/`. Pa
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | (opcional) cria a 1ª conta no primeiro start | — |
 
 3. **Importante:** monte um **disco/volume persistente** em `DATA_DIR`. Sem isso, o banco é apagado a cada novo deploy.
+4. Ao iniciar, o servidor acrescenta a um banco já existente os campos de conteúdo de recursos novos (ex.: calculadora, avaliações) que ainda não existam nele, como uma nova versão do histórico. Nada do que a equipe editou é alterado; fotos novas do portfólio, porém, precisam ser adicionadas pelo painel.
 
 ---
 
@@ -92,6 +99,10 @@ js/site/main.js          rotas, transições e efeitos da página inicial
 js/site/views.js         modelos das telas
 js/site/motion.js        rolagem suave, laço único de animação, paralaxe e revelações
 js/site/portfolio.js     portfólio: anel 3D, grade com filtros e visualizador
+js/site/calculator.js    calculadora de convidados (tela)
+js/site/reviews.js       avaliações de clientes
+js/shared/calculator.js  contas da calculadora (site, painel, servidor e testes)
+css/features.css         calculadora, avaliações, botão do WhatsApp, extras do portfólio
 js/site/kitchen3d.js     cena 3D do topo já empacotada (gerada — não editar à mão)
 src/3d/kitchen.js        código-fonte da cena 3D (three.js)
 js/site/cursor.js        cursor, botões magnéticos, cartões com inclinação
@@ -126,7 +137,7 @@ npm run build      # = build:3d (cena 3D) + build:vendor (Lenis)
 npm test
 ```
 
-Cobrem: versão pública do cardápio (sem itens ocultos nem preços escondidos), regras de seleção (escolha única, limite, seleções prontas), validação do formulário, mensagem do WhatsApp (sem preço), primeiro acesso, login, CSRF, salvar/versões/conflito/restaurar, ETag do cardápio, validação do cardápio e do portfólio e upload de imagens.
+Cobrem: versão pública do cardápio (sem itens ocultos nem preços escondidos), regras de seleção (escolha única, limite, seleções prontas), validação do formulário, mensagem do WhatsApp (sem preço), primeiro acesso, login, CSRF, salvar/versões/conflito/restaurar, ETag do cardápio, validação do cardápio, do portfólio, da calculadora e das avaliações, contas da calculadora, atualização de bancos antigos com os campos novos e upload de imagens.
 
 ## ✅ Antes de divulgar (do briefing)
 

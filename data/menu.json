@@ -395,8 +395,239 @@
         "h": 1013,
         "category": "eventos",
         "caption": "Montagem de coffee em cozinha"
+      },
+      {
+        "image": "assets/img/portfolio/insta-01.webp",
+        "thumb": "assets/img/portfolio/insta-01-sm.webp",
+        "w": 760,
+        "h": 506,
+        "category": "mesa",
+        "caption": "Mesa de frios com frutas, flores e pães artesanais"
+      },
+      {
+        "image": "assets/img/portfolio/insta-02.webp",
+        "thumb": "assets/img/portfolio/insta-02-sm.webp",
+        "w": 760,
+        "h": 506,
+        "category": "mesa",
+        "caption": "Pães, focaccias e decoração floral"
+      },
+      {
+        "image": "assets/img/portfolio/insta-03.webp",
+        "thumb": "assets/img/portfolio/insta-03-sm.webp",
+        "w": 760,
+        "h": 506,
+        "category": "mesa",
+        "caption": "Mesa posta com bolo rústico, bruschettas e frios"
+      },
+      {
+        "image": "assets/img/portfolio/insta-04.webp",
+        "thumb": "assets/img/portfolio/insta-04-sm.webp",
+        "w": 760,
+        "h": 506,
+        "category": "mesa",
+        "caption": "Mesa completa de frios, frutas e doces"
+      },
+      {
+        "image": "assets/img/portfolio/insta-05.webp",
+        "thumb": "assets/img/portfolio/insta-05-sm.webp",
+        "w": 760,
+        "h": 622,
+        "category": "pratos",
+        "caption": "Chef Carlos Jr com salmão grelhado e legumes"
+      },
+      {
+        "image": "assets/img/portfolio/insta-06.webp",
+        "thumb": "assets/img/portfolio/insta-06-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "mesa",
+        "caption": "Queijos, frutas e embutidos em detalhe"
+      },
+      {
+        "image": "assets/img/portfolio/insta-07.webp",
+        "thumb": "assets/img/portfolio/insta-07-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "mesa",
+        "caption": "Frios sobre pedra com uvas e queijos"
+      },
+      {
+        "image": "assets/img/portfolio/insta-08.webp",
+        "thumb": "assets/img/portfolio/insta-08-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "mesa",
+        "caption": "Frios, pitaya e morangos"
+      },
+      {
+        "image": "assets/img/portfolio/insta-09.webp",
+        "thumb": "assets/img/portfolio/insta-09-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "doces",
+        "caption": "Panna cotta com calda de frutas vermelhas"
+      },
+      {
+        "image": "assets/img/portfolio/insta-10.webp",
+        "thumb": "assets/img/portfolio/insta-10-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "coffee",
+        "caption": "Bolos, brownies e frutas para o café"
+      },
+      {
+        "image": "assets/img/portfolio/insta-11.webp",
+        "thumb": "assets/img/portfolio/insta-11-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "coffee",
+        "caption": "Quiche gratinada"
+      },
+      {
+        "image": "assets/img/portfolio/insta-12.webp",
+        "thumb": "assets/img/portfolio/insta-12-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "mesa",
+        "caption": "Frios, queijo azul e pães à luz de vela"
+      },
+      {
+        "image": "assets/img/portfolio/insta-13.webp",
+        "thumb": "assets/img/portfolio/insta-13-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "buffet",
+        "caption": "Risoto cremoso servido à francesa"
+      },
+      {
+        "image": "assets/img/portfolio/insta-14.webp",
+        "thumb": "assets/img/portfolio/insta-14-sm.webp",
+        "w": 760,
+        "h": 1013,
+        "category": "pratos",
+        "caption": "Salmão glaceado com risoto"
+      },
+      {
+        "image": "assets/img/portfolio/insta-15.webp",
+        "thumb": "assets/img/portfolio/insta-15-sm.webp",
+        "w": 760,
+        "h": 570,
+        "category": "mesa",
+        "caption": "Frutas, coco, presunto cru e queijo azul"
+      },
+      {
+        "image": "assets/img/portfolio/insta-16.webp",
+        "thumb": "assets/img/portfolio/insta-16-sm.webp",
+        "w": 760,
+        "h": 570,
+        "category": "buffet",
+        "caption": "Buffet com réchauds, pães e frutas"
+      },
+      {
+        "image": "assets/img/portfolio/insta-17.webp",
+        "thumb": "assets/img/portfolio/insta-17-sm.webp",
+        "w": 760,
+        "h": 570,
+        "category": "eventos",
+        "caption": "Mesa posta para jantar"
+      },
+      {
+        "image": "assets/img/portfolio/insta-18.webp",
+        "thumb": "assets/img/portfolio/insta-18-sm.webp",
+        "w": 760,
+        "h": 570,
+        "category": "buffet",
+        "caption": "Réchauds de risotos e gratinados"
+      },
+      {
+        "image": "assets/img/portfolio/insta-19.webp",
+        "thumb": "assets/img/portfolio/insta-19-sm.webp",
+        "w": 760,
+        "h": 570,
+        "category": "eventos",
+        "caption": "Chef Carlos Jr no serviço do buffet"
       }
-    ]
+    ],
+    "calcEnabled": true,
+    "calcTitle": "Calculadora de convidados",
+    "calcIntro": "Diga quantas pessoas vêm e o que você quer servir: mostramos quanto de comida preparar por convidado e uma faixa de valor aproximada.",
+    "calcNote": "Valores de referência aproximados para Florianópolis e região, sem bebidas, equipe de serviço, louças e deslocamento. O orçamento final é feito pelo Chef conforme o cardápio, o local e o formato do evento.",
+    "calcOptions": [
+      {
+        "id": "coffee-corporativo",
+        "name": "Coffee corporativo",
+        "categoryId": "coffee-corporativo",
+        "kind": "salgado",
+        "grams": 280,
+        "pieces": 9,
+        "piecesLabel": "salgados e doces",
+        "priceMin": 39,
+        "priceMax": 69,
+        "active": true
+      },
+      {
+        "id": "mesa-de-frios",
+        "name": "Mesa de frios",
+        "categoryId": "mesa-de-frios",
+        "kind": "salgado",
+        "grams": 250,
+        "pieces": 0,
+        "piecesLabel": "",
+        "priceMin": 55,
+        "priceMax": 95,
+        "active": true
+      },
+      {
+        "id": "finger-food",
+        "name": "Finger food",
+        "categoryId": "finger-foods",
+        "kind": "salgado",
+        "grams": 320,
+        "pieces": 14,
+        "piecesLabel": "unidades",
+        "priceMin": 65,
+        "priceMax": 115,
+        "active": true
+      },
+      {
+        "id": "buffet-de-risoto",
+        "name": "Buffet de risoto",
+        "categoryId": "buffet-de-risotos",
+        "kind": "salgado",
+        "grams": 350,
+        "pieces": 0,
+        "piecesLabel": "",
+        "priceMin": 70,
+        "priceMax": 120,
+        "active": true
+      },
+      {
+        "id": "sobremesas",
+        "name": "Sobremesas",
+        "categoryId": "sobremesas",
+        "kind": "doce",
+        "grams": 110,
+        "pieces": 3,
+        "piecesLabel": "porções",
+        "priceMin": 18,
+        "priceMax": 35,
+        "active": true
+      }
+    ],
+    "reviewsTitle": "Quem provou, recomenda",
+    "reviewsIntro": "Nota máxima no Google: clientes de eventos corporativos, aniversários e celebrações contam como foi ter o Chef Carlos e a equipe à mesa.",
+    "reviewsRating": 5,
+    "reviewsCount": 40,
+    "reviewsUrl": "https://share.google/rIWD4ek0SRCR3mKBz",
+    "reviewsHighlights": [
+      "Equipe profissional",
+      "Atenção aos detalhes",
+      "Cardápio variado",
+      "Dedicação da equipe",
+      "Pontualidade"
+    ],
+    "reviews": []
   },
   "categories": [
     {
@@ -1238,7 +1469,7 @@
       "id": "cook-show",
       "name": "Cook Show",
       "icon": "flame",
-      "image": "assets/img/portfolio/eventos-01-sm.webp",
+      "image": "assets/img/chef-cookshow-sm.webp",
       "short": "Preparo ao vivo pelo chef, com técnica, interação e apresentação.",
       "intro": "Uma experiência gastronômica com preparo ao vivo pelo chef, valorizando técnica, interação e apresentação. O prato, a duração e a estrutura são definidos de acordo com o evento.",
       "note": "",
@@ -1272,7 +1503,7 @@
               "price": null,
               "priceUnit": "",
               "availability": "Sob consulta",
-              "image": "",
+              "image": "assets/img/chef-cookshow.webp",
               "active": true
             }
           ]

@@ -19,9 +19,30 @@ import { publicView, diffMenus } from "../js/shared/menu.js";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const SEED_MENU_PATH = join(ROOT, "data", "menu.json");
 
+/**
+ * Bancos criados antes de um recurso novo (ex.: calculadora, avaliações) não têm os campos dele.
+ * Ao iniciar, completa só os campos de conteúdo que faltam, a partir de data/menu.json,
+ * como uma nova versão do histórico. O que a equipe já editou não muda.
+ */
+export function addNewContentFields(store, seed) {
+  const current = store.currentMenu();
+  if (!current) return [];
+  const missing = Object.keys(seed.content).filter((k) => !Object.hasOwn(current.menu.content || {}, k));
+  if (!missing.length) return [];
+  const content = { ...current.menu.content };
+  for (const k of missing) content[k] = seed.content[k];
+  store.saveMenu(V.menuDoc({ ...current.menu, content }), { summary: [`Novos recursos do site adicionados: ${missing.join(", ")}`] });
+  return missing;
+}
+
 export function createApp({ dataDir, setupCode = null, trustProxy = false, secureCookies = false, logger = console } = {}) {
   const seed = V.menuDoc(JSON.parse(readFileSync(SEED_MENU_PATH, "utf8")));
   const store = openDatabase(dataDir, { seed });
+  try {
+    addNewContentFields(store, seed);
+  } catch (e) { // banco com versão que não valida mais: sobe o site assim mesmo e registra para correção
+    logger.error("Não foi possível acrescentar os campos novos ao cardápio salvo:", e.message);
+  }
   const uploadsDir = join(dataDir, "uploads");
   mkdirSync(uploadsDir, { recursive: true });
   const state = { setupCode };

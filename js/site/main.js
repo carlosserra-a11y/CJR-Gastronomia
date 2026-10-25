@@ -7,6 +7,8 @@ import { $, $$, setHTML, toast } from "./util.js";
 import { initMotion, onFrame, motion, scan, scrollTo, measure } from "./motion.js";
 import { initCursor } from "./cursor.js";
 import { mountPortfolio } from "./portfolio.js";
+import { mountCalculator } from "./calculator.js";
+import { mountReviews } from "./reviews.js";
 import { loadMenu } from "./api.js";
 import { indexMenu } from "../shared/menu.js";
 import * as store from "./store.js";
@@ -16,7 +18,7 @@ import { openLayer, closeLayer, closeAll } from "./dialog.js";
 
 const root = document.documentElement;
 const view = $("#view");
-const HOME_SECTIONS = new Set(["servicos", "portfolio", "como-funciona", "chef", "sobre", "contato"]);
+const HOME_SECTIONS = new Set(["servicos", "calculadora", "portfolio", "avaliacoes", "como-funciona", "chef", "sobre", "contato"]);
 const LEAVE_MS = 320;
 const app = { menu: null, idx: null, route: null, key: "", cleanups: [] };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -45,6 +47,8 @@ async function boot() {
   setHTML($("#footer"), V.footerView(app.menu));
   const wa = V.greetingUrl(app.menu.settings);
   $$("[data-whats]").forEach((a) => { if (wa) { a.href = wa; a.hidden = false; } });
+  peekWhatsApp();
+  hideMissingSections(app.menu.content);
   $("#selbar").hidden = false;
   store.onChange(syncSelection);
   window.addEventListener("hashchange", () => route());
@@ -54,6 +58,26 @@ async function boot() {
   } finally {
     finishIntro(); // mesmo se a primeira tela falhar, a abertura nunca fica presa
   }
+}
+
+/** Calculadora ou avaliações desligadas no painel: some o link do menu, do rodapé e do celular. */
+function hideMissingSections(c) {
+  const present = {
+    calculadora: c.calcEnabled !== false && (c.calcOptions || []).length > 0,
+    avaliacoes: Boolean(c.reviewsCount || (c.reviews || []).length),
+  };
+  for (const [id, on] of Object.entries(present)) {
+    if (!on) $$(`a[href="#/${id}"]`).forEach((a) => { a.hidden = true; a.style.display = "none"; });
+  }
+}
+
+/** Botão flutuante do WhatsApp: uma vez por visita, mostra o convite "Fale com o Chef" por alguns segundos. */
+function peekWhatsApp() {
+  const btn = $(".wa-float");
+  if (!btn || btn.hidden || motion.reduced) return;
+  try { if (sessionStorage.getItem("cjr:wa-peek")) return; sessionStorage.setItem("cjr:wa-peek", "1"); } catch { /* sem armazenamento: mostra mesmo assim */ }
+  setTimeout(() => btn.classList.add("is-peek"), 4000);
+  setTimeout(() => btn.classList.remove("is-peek"), 9500);
 }
 
 function finishIntro() {
@@ -90,7 +114,7 @@ async function route({ first = false } = {}) {
   closeAll();
   if (key === app.key) { // mesma tela: só rola até a seção
     view.classList.remove("is-leaving");
-    scrollTo(r.section ? $(`#${r.section}`) : 0);
+    scrollTo((r.section && $(`#${r.section}`)) || 0);
     return;
   }
   if (!first && !motion.reduced) {
@@ -100,7 +124,7 @@ async function route({ first = false } = {}) {
   }
   render(r);
   app.key = key;
-  if (r.section) requestAnimationFrame(() => scrollTo($(`#${r.section}`), { immediate: first }));
+  if (r.section) requestAnimationFrame(() => scrollTo($(`#${r.section}`) || 0, { immediate: first })); // seção desligada no painel: vai ao topo
   else scrollTo(0, { immediate: true });
   view.classList.remove("is-leaving");
   view.classList.add("is-entering");
@@ -122,7 +146,13 @@ function render(r) {
   }
   if (name === "home") {
     setHTML(view, V.homeView(app.menu));
-    app.cleanups.push(mountHero3D(), mountPortfolio($("#portfolio"), app.menu.content.portfolio), homeEffects());
+    app.cleanups.push(
+      mountHero3D(),
+      mountCalculator($("#calculadora"), app.menu),
+      mountPortfolio($("#portfolio"), app.menu.content.portfolio, { whatsapp: app.menu.settings.whatsapp }),
+      mountReviews($("#avaliacoes")),
+      homeEffects(),
+    );
     document.title = `${brand} · ${app.menu.content.heroKicker}`;
   }
   if (name === "quote") {

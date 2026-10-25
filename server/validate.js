@@ -4,6 +4,7 @@
    ValidationError com uma mensagem que diz ONDE está o problema.
    ============================================================ */
 import { TIERS, PORTFOLIO_CATEGORIES } from "../js/shared/menu.js";
+import { CALC_KINDS } from "../js/shared/calculator.js";
 
 export class ValidationError extends Error {
   constructor(message, field) { super(message); this.status = 400; this.field = field; }
@@ -116,6 +117,39 @@ function content(input) {
       caption: str(p?.caption, { field: `Portfólio — legenda ${i + 1}`, max: 120 }),
     };
   }).filter((p) => p.image);
+  const calcIds = new Set();
+  const calcOptions = (Array.isArray(input.calcOptions) ? input.calcOptions : []).slice(0, 10).map((o, i) => {
+    const ctx = `Calculadora — opção ${i + 1}`;
+    const name = str(o?.name, { field: `${ctx} (nome)`, required: true, max: 60 });
+    const optId = id(o?.id || name, `${ctx} (identificador)`);
+    if (calcIds.has(optId)) fail(`${ctx}: já existe outra opção com o mesmo nome.`, "calcOptions");
+    calcIds.add(optId);
+    let priceMin = price(o?.priceMin, `${ctx} (valor mínimo por pessoa)`) ?? 0;
+    let priceMax = price(o?.priceMax, `${ctx} (valor máximo por pessoa)`) ?? priceMin;
+    if (priceMax < priceMin) [priceMin, priceMax] = [priceMax, priceMin];
+    return {
+      id: optId,
+      name,
+      categoryId: typeof o?.categoryId === "string" ? slugify(o.categoryId) : "",
+      kind: typeof o?.kind === "string" && Object.hasOwn(CALC_KINDS, o.kind) ? o.kind : "salgado",
+      grams: int(o?.grams, { field: `${ctx} (gramas por pessoa)`, min: 0, max: 2000 }),
+      pieces: int(o?.pieces, { field: `${ctx} (unidades por pessoa)`, min: 0, max: 100 }),
+      piecesLabel: str(o?.piecesLabel, { field: `${ctx} (nome das unidades)`, max: 30 }),
+      priceMin,
+      priceMax,
+      active: bool(o?.active, true),
+    };
+  });
+  const reviews = (Array.isArray(input.reviews) ? input.reviews : []).slice(0, 30).map((r, i) => ({
+    name: str(r?.name, { field: `Avaliação ${i + 1} (nome)`, required: true, max: 60 }),
+    text: str(r?.text, { field: `Avaliação ${i + 1} (texto)`, required: true, max: 600, multiline: true }),
+    rating: int(r?.rating === undefined || r?.rating === "" ? 5 : r.rating, { field: `Avaliação ${i + 1} (estrelas)`, min: 1, max: 5 }),
+    event: str(r?.event, { field: `Avaliação ${i + 1} (evento)`, max: 60 }),
+  }));
+  const reviewsUrl = str(input.reviewsUrl, { field: "Avaliações — link", max: 300 });
+  if (reviewsUrl && !/^https:\/\/[^\s"'<>()]+$/i.test(reviewsUrl)) fail('Avaliações — link: use um endereço que comece com "https://".', "reviewsUrl");
+  const rating = input.reviewsRating === "" || input.reviewsRating == null ? 5 : Number(String(input.reviewsRating).replace(",", "."));
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) fail("Avaliações — nota: use um número de 1 a 5 (ex.: 4,9).", "reviewsRating");
   return {
     heroKicker: s("heroKicker", "Topo — chamada pequena", 80),
     heroTitle: str(input.heroTitle, { field: "Topo — título", required: true, max: 120 }),
@@ -136,6 +170,18 @@ function content(input) {
     portfolioTitle: s("portfolioTitle", "Portfólio — título", 80) || "Portfólio",
     portfolioIntro: s("portfolioIntro", "Portfólio — texto", 400, true),
     portfolio,
+    calcEnabled: bool(input.calcEnabled, true),
+    calcTitle: s("calcTitle", "Calculadora — título", 80) || "Calculadora de convidados",
+    calcIntro: s("calcIntro", "Calculadora — texto", 400, true),
+    calcNote: s("calcNote", "Calculadora — observação", 400, true),
+    calcOptions,
+    reviewsTitle: s("reviewsTitle", "Avaliações — título", 80) || "Quem provou, recomenda",
+    reviewsIntro: s("reviewsIntro", "Avaliações — texto", 300, true),
+    reviewsRating: Math.round(rating * 10) / 10,
+    reviewsCount: int(input.reviewsCount, { field: "Avaliações — total", min: 0, max: 100000 }),
+    reviewsUrl,
+    reviewsHighlights: list(input.reviewsHighlights, { field: "Avaliações — destaques", max: 8, itemMax: 40 }),
+    reviews,
     ctaTitle: s("ctaTitle", "Chamada final — título", 100),
     ctaText: s("ctaText", "Chamada final — texto", 300, true),
     privacyText: str(input.privacyText, { field: "Aviso de privacidade", required: true, max: 5000, multiline: true }),
@@ -224,5 +270,8 @@ export function menuDoc(input) {
     seen.add(clean.id);
     return clean;
   });
-  return { schema: 1, settings: settings(input.settings || {}), content: content(input.content || {}), categories };
+  const cleanContent = content(input.content || {});
+  // opção da calculadora ligada a uma categoria que não existe mais fica sem vínculo
+  cleanContent.calcOptions = cleanContent.calcOptions.map((o) => (seen.has(o.categoryId) ? o : { ...o, categoryId: "" }));
+  return { schema: 1, settings: settings(input.settings || {}), content: cleanContent, categories };
 }

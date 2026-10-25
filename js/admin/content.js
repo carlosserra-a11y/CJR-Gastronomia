@@ -6,6 +6,7 @@
 import { html, setHTML, S, mutate, field, area, choice, imageField, toggle, bindFields, refocus } from "./core.js";
 import { whatsappUrl } from "../shared/quote.js";
 import { PORTFOLIO_CATEGORIES } from "../shared/menu.js";
+import { CALC_KINDS } from "../shared/calculator.js";
 
 const move = (arr, i, j) => { if (j < 0 || j >= arr.length) return; const [x] = arr.splice(i, 1); arr.splice(j, 0, x); };
 
@@ -29,8 +30,11 @@ const BLANK = {
   howSteps: () => ({ title: "Novo passo", text: "" }),
   chefStats: () => ({ value: "0", label: "" }),
   portfolio: () => ({ image: "", thumb: "", w: 0, h: 0, category: "eventos", caption: "" }),
+  calcOptions: () => ({ id: "", name: "Nova opção", categoryId: "", kind: "salgado", grams: 250, pieces: 0, piecesLabel: "", priceMin: 0, priceMax: 0, active: true }),
+  reviews: () => ({ name: "", text: "", rating: 5, event: "" }),
 };
-const MAX = { howSteps: 8, chefStats: 4, portfolio: 80 };
+const MAX = { howSteps: 8, chefStats: 4, portfolio: 80, calcOptions: 10, reviews: 30 };
+const RATING_OPTIONS = [5, 4, 3, 2, 1].map((n) => [n, "★".repeat(n)]);
 const CATEGORY_OPTIONS = Object.entries(PORTFOLIO_CATEGORIES);
 const PORTFOLIO_IMAGE = /^content\.portfolio\.(\d+)\.image$/;
 
@@ -88,6 +92,35 @@ export function textsView(view) {
       ${repeater("portfolio", "Fotos", c.portfolio || [], (p, i) => html`
         ${imageField(`Foto ${i + 1}`, `content.portfolio.${i}.image`)}
         <div class="grid-2">${choice("Categoria (filtro)", `content.portfolio.${i}.category`, CATEGORY_OPTIONS)}${field("Legenda", `content.portfolio.${i}.caption`, { max: 120 })}</div>`, { addLabel: "+ Foto", max: MAX.portfolio })}
+    </section>
+
+    <section class="panel">
+      <h3>Calculadora de convidados</h3>
+      <p class="sub">Valores <b>aproximados por pessoa</b> e quantidade de comida por convidado. O site multiplica pelo número de convidados e mostra uma faixa (mínimo–máximo); com dois ou mais salgados, cada porção cai 20%.</p>
+      <div class="switch-line">${toggle("content.calcEnabled", "Mostrar a calculadora no site")}</div>
+      ${field("Título", "content.calcTitle", { max: 80 })}
+      ${area("Texto", "content.calcIntro", { rows: 2, max: 400 })}
+      ${area("Observação (o que o valor não inclui)", "content.calcNote", { rows: 2, max: 400 })}
+      ${repeater("calcOptions", "Opções", c.calcOptions || [], (o, i) => html`
+        <div class="grid-2">${field("Nome", `content.calcOptions.${i}.name`, { max: 60 })}${choice("Página do cardápio", `content.calcOptions.${i}.categoryId`, [["", "Sem link"], ...S.draft.categories.map((cat) => [cat.id, cat.name])])}</div>
+        <div class="grid-2">${field("Gramas por pessoa", `content.calcOptions.${i}.grams`, { type: "int", attrs: 'min="0" max="2000"' })}${choice("Tipo", `content.calcOptions.${i}.kind`, Object.entries(CALC_KINDS))}</div>
+        <div class="grid-2">${field("Unidades por pessoa (0 = não mostrar)", `content.calcOptions.${i}.pieces`, { type: "int", attrs: 'min="0" max="100"' })}${field("Nome das unidades", `content.calcOptions.${i}.piecesLabel`, { max: 30, placeholder: "Ex.: salgados e doces" })}</div>
+        <div class="grid-2">${field("Valor mínimo por pessoa (R$)", `content.calcOptions.${i}.priceMin`, { type: "price" })}${field("Valor máximo por pessoa (R$)", `content.calcOptions.${i}.priceMax`, { type: "price" })}</div>
+        <div class="switch-line">${toggle(`content.calcOptions.${i}.active`, "Aparece na calculadora")}</div>`, { addLabel: "+ Opção", max: MAX.calcOptions })}
+    </section>
+
+    <section class="panel">
+      <h3>Avaliações de clientes</h3>
+      <p class="sub">Atualize a nota e o total quando mudarem no Google. Depoimentos aparecem em um carrossel; cadastre só com a autorização do cliente.</p>
+      ${field("Título", "content.reviewsTitle", { max: 80 })}
+      ${area("Texto", "content.reviewsIntro", { rows: 2, max: 300 })}
+      <div class="grid-2">${field("Nota no Google (ex.: 4,9)", "content.reviewsRating", { max: 3 })}${field("Total de avaliações", "content.reviewsCount", { type: "int", attrs: 'min="0"' })}</div>
+      ${field("Link das avaliações (https://)", "content.reviewsUrl", { type: "url", max: 300 })}
+      ${area("Destaques (um por linha)", "content.reviewsHighlights", { lines: true, rows: 3 })}
+      ${repeater("reviews", "Depoimentos", c.reviews || [], (r, i) => html`
+        <div class="grid-2">${field("Nome do cliente", `content.reviews.${i}.name`, { max: 60 })}${field("Evento (opcional)", `content.reviews.${i}.event`, { max: 60, placeholder: "Ex.: Aniversário de 60 anos" })}</div>
+        ${choice("Estrelas", `content.reviews.${i}.rating`, RATING_OPTIONS, { type: "int" })}
+        ${area("Depoimento", `content.reviews.${i}.text`, { rows: 3, max: 600 })}`, { addLabel: "+ Depoimento", max: MAX.reviews })}
     </section>
 
     <section class="panel">

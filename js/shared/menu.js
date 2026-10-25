@@ -36,7 +36,13 @@ export function publicView(doc) {
       .filter((p) => p.itemIds.length);
     return { ...c, groups, presets };
   }).filter((c) => c.groups.length);
-  return { ...doc, categories };
+  // calculadora: some a opção desativada ou ligada a uma categoria oculta
+  const visible = new Set(categories.map((c) => c.id));
+  const content = doc.content && {
+    ...doc.content,
+    calcOptions: (doc.content.calcOptions || []).filter((o) => isActive(o) && (!o.categoryId || visible.has(o.categoryId))),
+  };
+  return { ...doc, content, categories };
 }
 
 /** Índice para buscas rápidas: categoria por id e item por id (dentro da categoria). */

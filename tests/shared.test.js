@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { publicView, indexMenu, priceLabel, diffMenus } from "../js/shared/menu.js";
 import { toggleItem, removeItem, applyPreset, setChoice, sanitize, selectionLines, countSelected } from "../js/shared/selection.js";
 import { validateQuote, buildQuoteMessage, whatsappUrl, normalizePhone, formatEventDate } from "../js/shared/quote.js";
+import { estimate, estimateMessage, clampGuests, COMBO_FACTOR } from "../js/shared/calculator.js";
 
 const seed = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
 const clone = (x) => structuredClone(x);
@@ -196,4 +197,60 @@ test("link do WhatsApp só existe com número configurado", () => {
 test("data do evento por extenso", () => {
   assert.equal(formatEventDate("2027-03-12"), "sexta-feira, 12/03/2027");
   assert.equal(formatEventDate("errado"), "");
+});
+
+/* ---------- Calculadora de convidados ---------- */
+
+const calcOptions = seed.content.calcOptions;
+const opt = (id) => calcOptions.find((o) => o.id === id);
+
+test("calculadora: quantidade e faixa de preço crescem com os convidados", () => {
+  const r = estimate({ guests: 100, profile: "normal", selected: ["buffet-de-risoto"] }, calcOptions);
+  const o = opt("buffet-de-risoto");
+  assert.equal(r.lines.length, 1);
+  assert.equal(r.lines[0].perGuestGrams, o.grams);
+  assert.equal(r.totalGrams, o.grams * 100);
+  assert.equal(r.min, o.priceMin * 100);
+  assert.equal(r.max, o.priceMax * 100);
+  assert.ok(r.min <= r.max);
+  assert.equal(r.combo, false);
+});
+
+test("calculadora: perfil farto aumenta e dois salgados reduzem a porção de cada um", () => {
+  const normal = estimate({ guests: 50, selected: ["finger-food"] }, calcOptions);
+  const farto = estimate({ guests: 50, profile: "farto", selected: ["finger-food"] }, calcOptions);
+  assert.ok(farto.totalGrams > normal.totalGrams);
+  const combo = estimate({ guests: 50, selected: ["finger-food", "mesa-de-frios", "sobremesas"] }, calcOptions);
+  assert.equal(combo.combo, true);
+  const finger = combo.lines.find((l) => l.id === "finger-food");
+  assert.equal(finger.perGuestGrams, Math.round(opt("finger-food").grams * COMBO_FACTOR));
+  const sweet = combo.lines.find((l) => l.id === "sobremesas");
+  assert.equal(sweet.perGuestGrams, opt("sobremesas").grams, "doce não entra na redução");
+});
+
+test("calculadora: convidados fora da faixa e opções desconhecidas ou inativas são ignorados", () => {
+  assert.equal(clampGuests(-5), 1);
+  assert.equal(clampGuests("abc"), 1);
+  assert.equal(clampGuests(99999), 2000);
+  const off = calcOptions.map((o) => (o.id === "sobremesas" ? { ...o, active: false } : o));
+  const r = estimate({ guests: 10, selected: ["sobremesas", "nao-existe"] }, off);
+  assert.equal(r.lines.length, 0);
+  assert.equal(r.min, 0);
+});
+
+test("calculadora: mensagem do WhatsApp traz convidados, quantidades e avisa que é aproximado", () => {
+  const msg = estimateMessage(estimate({ guests: 80, selected: ["finger-food"] }, calcOptions));
+  assert.match(msg, /Convidados: 80/);
+  assert.match(msg, /Finger food: \d+ unidades/);
+  assert.match(msg, /aproximado/);
+});
+
+test("versão pública esconde opções da calculadora desativadas ou de categoria oculta", () => {
+  const doc = clone(seed);
+  doc.content.calcOptions[0].active = false;
+  doc.categories.find((c) => c.id === "sobremesas").active = false;
+  const ids = publicView(doc).content.calcOptions.map((o) => o.id);
+  assert.ok(!ids.includes(seed.content.calcOptions[0].id));
+  assert.ok(!ids.includes("sobremesas"));
+  assert.ok(ids.includes("buffet-de-risoto"));
 });

@@ -6,6 +6,8 @@ import { html, raw, paragraphs, pad2, splitWords, imgSrc } from "./util.js";
 import { categoryIcon, ui } from "./icons.js";
 import { priceLabel, PORTFOLIO_CATEGORIES } from "../shared/menu.js";
 import { ringPicks } from "./portfolio.js";
+import { calculatorSection } from "./calculator.js";
+import { reviewsSection } from "./reviews.js";
 import { whatsappUrl, EVENT_TYPES, LIMITS, todayISO } from "../shared/quote.js";
 import * as store from "./store.js";
 
@@ -66,12 +68,20 @@ function portfolioSection(c) {
         <button type="button" class="ring-btn" data-ring="1" aria-label="Girar para a direita">${ui.arrow}</button>
       </div>
     </div>` : ""}
+    <div class="pf-tools">
     <div class="pf-filters" role="group" aria-label="Filtrar o portfólio">
       <button type="button" class="chip" data-filter="todos" aria-pressed="true">Todos <small>${items.length}</small></button>
       ${Object.entries(PORTFOLIO_CATEGORIES).filter(([k]) => counts[k]).map(([k, label]) => html`
         <button type="button" class="chip" data-filter="${k}" aria-pressed="false">${label} <small>${counts[k]}</small></button>`)}
     </div>
+    <button type="button" class="pf-surprise" data-surprise><i aria-hidden="true">✦</i>Surpreenda-me</button>
+    </div>
     <div class="pf-grid"></div>
+    <div class="pf-more" hidden>
+      <p class="pf-count" aria-live="polite"></p>
+      <div class="pf-progress" aria-hidden="true"><i></i></div>
+      <button type="button" class="btn btn-ghost" data-more><span>Ver mais fotos</span></button>
+    </div>
   </section>`;
 }
 
@@ -116,6 +126,8 @@ export function homeView(menu) {
     </header>
     <div class="cat-grid">${menu.categories.map(categoryCard)}</div>
   </section>
+
+  ${calculatorSection(c)}
 
   ${portfolioSection(c)}
 
@@ -173,6 +185,8 @@ export function homeView(menu) {
       <p>Técnica, criatividade e <em>hospitalidade</em> — para transformar cada evento em uma experiência memorável.</p>
     </blockquote>
   </section>
+
+  ${reviewsSection(c)}
 
   <section class="section cta" id="contato">
     <div class="cta-inner" data-reveal>
@@ -446,7 +460,7 @@ export function footerView(menu) {
       <p>${menu.content.heroKicker}.${s.serviceArea ? ` ${s.serviceArea}.` : ""}</p>
     </div>
     <nav class="footer-nav" aria-label="Rodapé">
-      <a href="#/servicos">Serviços</a><a href="#/portfolio">Portfólio</a><a href="#/como-funciona">Como funciona</a><a href="#/chef">O Chef</a><a href="#/orcamento">Orçamento</a>
+      <a href="#/servicos">Serviços</a><a href="#/calculadora">Calculadora</a><a href="#/portfolio">Portfólio</a><a href="#/avaliacoes">Avaliações</a><a href="#/como-funciona">Como funciona</a><a href="#/chef">O Chef</a><a href="#/orcamento">Orçamento</a>
     </nav>
     <div class="footer-contact">
       ${wa ? html`<a href="${wa}" target="_blank" rel="noopener">${ui.whats}<span>WhatsApp</span></a>` : ""}

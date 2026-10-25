@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createApp } from "../server/app.js";
+import { createApp, addNewContentFields } from "../server/app.js";
+import { openDatabase } from "../server/db.js";
 import { menuDoc } from "../server/validate.js";
 
 let server, base, ctx, dataDir;
@@ -56,6 +57,41 @@ test("portfólio: categoria desconhecida vira 'eventos', miniatura cai na foto e
   assert.throws(() => menuDoc(raw), /Portfólio — foto 1/);
   raw.content.portfolio = [{ image: "assets/img/portfolio/mesa-01.webp", caption: "x".repeat(121) }];
   assert.throws(() => menuDoc(raw), /Portfólio — legenda 1/);
+});
+
+test("calculadora: valores inválidos são recusados, faixa invertida é corrigida e categoria inexistente perde o vínculo", () => {
+  const raw = JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
+  raw.content.calcOptions = [{ name: "Teste", categoryId: "nao-existe", kind: ["doce"], grams: 300, priceMin: 90, priceMax: 40 }];
+  const [o] = menuDoc(raw).content.calcOptions;
+  assert.equal(o.categoryId, "");
+  assert.equal(o.kind, "salgado");
+  assert.equal(o.priceMin, 40);
+  assert.equal(o.priceMax, 90);
+  raw.content.calcOptions = [{ name: "Teste", grams: 5000 }];
+  assert.throws(() => menuDoc(raw), /Calculadora — opção 1 \(gramas por pessoa\)/);
+  raw.content.calcOptions = [{ name: "Igual" }, { name: "Igual" }];
+  assert.throws(() => menuDoc(raw), /mesmo nome/);
+});
+
+test("banco antigo ganha os campos novos do site sem perder o que a equipe editou", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cjr-mig-"));
+  const seedDoc = menuDoc(JSON.parse(readFileSync(new URL("../data/menu.json", import.meta.url), "utf8")));
+  const old = structuredClone(seedDoc);
+  delete old.content.calcOptions;
+  delete old.content.reviews;
+  old.content.heroTitle = "Título editado pela equipe";
+  const store = openDatabase(dir, { seed: old });
+  try {
+    const added = addNewContentFields(store, seedDoc);
+    assert.ok(added.includes("calcOptions") && added.includes("reviews"));
+    const cur = store.currentMenu().menu;
+    assert.equal(cur.content.heroTitle, "Título editado pela equipe");
+    assert.equal(cur.content.calcOptions.length, seedDoc.content.calcOptions.length);
+    assert.deepEqual(addNewContentFields(store, seedDoc), [], "não repete a atualização");
+  } finally {
+    store.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("seleções prontas são descartadas em categoria de escolha única", () => {
