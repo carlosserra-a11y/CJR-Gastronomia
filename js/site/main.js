@@ -58,6 +58,7 @@ async function boot() {
   applyConsent(initConsent());
   onConsent((c) => { applyConsent(c); if (c.stats) gaPage(); });
   setHTML($("#footer"), V.footerView(app.menu));
+  if (!hasServer()) $(`#footer a[href="admin/"]`)?.remove(); // sem servidor (hospedagem estática) não há painel
   const wa = V.greetingUrl(app.menu.settings);
   $$("[data-whats]").forEach((a) => { if (wa) { a.href = wa; a.hidden = false; } });
   peekWhatsApp();

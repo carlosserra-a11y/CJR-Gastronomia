@@ -1,12 +1,20 @@
-# CJR Gastronomia — segurança na hospedagem Apache/LiteSpeed (Hostinger).
+# CJR Gastronomia — hospedagem Apache/LiteSpeed (HostGator, Hostinger…): HTTPS, endereços antigos, cache e segurança.
 # Vale para a versão estática do site; o servidor Node.js já envia estes cabeçalhos sozinho.
 Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  # sempre HTTPS
+  # sempre HTTPS e sempre sem "www" (um endereço só para o Google). A 2ª condição evita laço atrás de proxy.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
   RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # cópia antiga do WordPress no cache do navegador: os scripts dela recarregam a página uma vez (mostra o site novo)
+  RewriteRule ^wp-(content|includes)/.+\.js$ /js/site/legacy-reload.js [R=302,L]
+  # endereços do site antigo (WordPress) levam ao início, sem perder quem chega pelo Google ou por links antigos
+  RewriteRule ^(sample-page|pagina-em-construcao|category|author|feed|comments|wp-admin|wp-content|wp-includes|wp-json|20[0-9]{2})(/.*)?$ / [R=301,L]
+  RewriteRule ^(wp-[a-z-]+|xmlrpc|sapp-wp-signon|index)\.php$ / [R=301,L]
   # pastas internas do projeto nunca são servidas
   RewriteRule ^(server|tests|src|node_modules|scripts|[.]git|[.]claude)(/|$) - [F,L]
 </IfModule>
@@ -15,6 +23,21 @@ Options -Indexes
 <FilesMatch "^(package(-lock)?[.]json|README[.]md|[.]gitignore|[.]nojekyll|[.]env.*)$">
   Require all denied
 </FilesMatch>
+
+# cache: fotos e fontes por mais tempo; páginas, estilos e scripts curtos (atualizações aparecem logo)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType text/css "access plus 1 hour"
+  ExpiresByType text/javascript "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
 
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=63072000"
