@@ -76,11 +76,11 @@ export function validateQuote(input, { today = todayISO(), hasSelections = false
     if (!parseISODate(value.date)) errors.date = "Informe a data do evento (ou marque que ainda não está definida).";
     else if (value.date < today) errors.date = "A data do evento já passou.";
   }
-  if (value.place.length < 2) errors.place = "Informe o local ou a cidade do evento.";
+  if (value.place.length < 2) errors.place = "Informe a cidade ou o bairro do evento.";
   if (!Number.isFinite(value.guests) || value.guests < 1) errors.guests = "Informe quantos convidados você espera.";
   else if (value.guests > LIMITS.guestsMax) errors.guests = `Para mais de ${LIMITS.guestsMax} convidados, conte nos detalhes em observações.`;
   if (!hasSelections && !value.interests.length) errors.interests = "Escolha pelo menos um serviço de interesse.";
-  if (!value.consent) errors.consent = "Para enviar, confirme que leu o aviso de privacidade.";
+  if (!value.consent) errors.consent = "Para enviar, confirme que leu a Política de Privacidade.";
 
   return { ok: Object.keys(errors).length === 0, errors, value };
 }

@@ -17,7 +17,7 @@ Options -Indexes
 </FilesMatch>
 
 <IfModule mod_headers.c>
-  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set Strict-Transport-Security "max-age=63072000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
@@ -25,6 +25,6 @@ Options -Indexes
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Cross-Origin-Resource-Policy "same-origin"
   Header always set X-Permitted-Cross-Domain-Policies "none"
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; media-src 'self'; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
   Header always unset X-Powered-By
 </IfModule>

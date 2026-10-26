@@ -30,7 +30,9 @@ export function toggle(categoryId, itemId) {
   if (!category) return null;
   const r = S.toggleItem(state, category, itemId);
   commit(r.state);
-  if (!r.error && S.isSelected(r.state, categoryId, itemId)) track("dish", { c: categoryId, i: itemId });
+  if (!r.error && S.isSelected(r.state, categoryId, itemId)) {
+    track("dish", { c: categoryId, i: itemId, name: idx?.categories.get(categoryId)?.items.get(itemId)?.name || "" });
+  }
   return r.error;
 }
 

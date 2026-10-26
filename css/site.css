@@ -75,8 +75,8 @@ em { font-style: italic; color: var(--copper); }
 ::selection { background: var(--copper); color: #fff; }
 :focus-visible { outline: 2px solid var(--copper); outline-offset: 3px; border-radius: 6px; }
 .sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.skip { position: fixed; left: 16px; top: -60px; z-index: 200; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-weight: 700; text-decoration: none; transition: top var(--t-fast); }
-.skip:focus { top: 16px; }
+.skip { position: fixed; left: 16px; top: 16px; translate: 0 -200%; z-index: 200; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-weight: 700; text-decoration: none; transition: translate var(--t-fast); }
+.skip:focus { translate: none; }
 .noscript { position: fixed; inset: auto 16px 16px; z-index: 300; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
 .grain {
   position: fixed; inset: -50%; z-index: 90; pointer-events: none; opacity: 0.035; mix-blend-mode: multiply;

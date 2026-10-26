@@ -51,6 +51,8 @@ Na primeira vez que o servidor liga, o terminal mostra um **código de configura
 | Adicionar, reordenar ou tirar **fotos do portfólio** (com categoria e legenda) | **Textos do site** → Portfólio |
 | Ajustar **gramas por pessoa e valores aproximados** da calculadora | **Textos do site** → Calculadora de convidados |
 | Atualizar **nota/total do Google** ou cadastrar **depoimentos** | **Textos do site** → Avaliações de clientes |
+| Editar **Política de Privacidade, Termos de Uso e Cancelamento/Reembolso** | **Textos do site** → Textos legais (marcadores como `{{empresa}}` e `{{cnpj}}` puxam os dados da empresa) |
+| Mudar **razão social, CNPJ e cidade** (rodapé e textos legais) ou colocar o **Google Analytics (G-…)** | **Contato e configurações** |
 | Desfazer uma alteração | **Histórico** → Restaurar |
 | Ver o que falta antes de divulgar | **Visão geral** (lista de pendências) |
 | Ver **visitas, pedidos de orçamento, pratos mais procurados**, de onde vêm os clientes, horários e mais | **Estatísticas** (7, 30, 90 dias ou 12 meses) |
@@ -128,7 +130,10 @@ npm run build      # = build:3d (cena 3D) + build:vendor (Lenis)
 ## 🔒 Segurança e privacidade
 
 - **Dados dos clientes não são gravados no servidor**: a mensagem é montada no navegador e enviada pelo próprio cliente no WhatsApp. A seleção fica só no aparelho dele (há aviso de privacidade no site).
-- **Estatísticas anônimas** (painel → Estatísticas): o site registra ações como "escolheu tal prato", "enviou pedido" e a origem da visita, sem cookies e sem nome, telefone, e-mail ou IP. Respeita "não rastrear" do navegador; dados com mais de 400 dias são apagados sozinhos. Só funciona com o servidor no ar (no GitHub Pages não há onde gravar). Para medir campanhas, use links com `?utm_source=instagram&utm_campaign=nome`.
+- **Aviso de cookies (LGPD)**: "Aceitar" e "Recusar" com o mesmo destaque e "Personalizar"; estatísticas e Google Analytics só ligam depois do aceite e desligam (apagando os cookies do GA) se a pessoa mudar de ideia no rodapé ("Preferências de cookies"). A escolha vale 6 meses.
+- **Páginas legais**: `#/privacidade`, `#/termos` e `#/reembolso`, com os dados da empresa no rodapé. Revise com um advogado antes de mudar regras de dados ou de cancelamento.
+- **Fontes no próprio site** (`assets/fonts`, licença OFL): nenhuma requisição ao Google Fonts. Licenças de terceiros em `THIRD-PARTY-NOTICES.txt`.
+- **Estatísticas anônimas** (painel → Estatísticas): com o consentimento do aviso de cookies, o site registra ações como "escolheu tal prato", "enviou pedido" e a origem da visita, sem cookies e sem nome, telefone, e-mail ou IP. Respeita "não rastrear" do navegador; dados com mais de 400 dias são apagados sozinhos. Só funciona com o servidor no ar (no GitHub Pages não há onde gravar). Para medir campanhas, use links com `?utm_source=instagram&utm_campaign=nome`.
 - Senhas com **scrypt** + sal; sessão em cookie `HttpOnly` + `SameSite=Strict`; proteção CSRF; limite de tentativas de login.
 - Todo conteúdo é **escapado** antes de aparecer na tela e validado no servidor (fotos só de upload, `assets/img/` ou `https://`).
 - Cabeçalhos de segurança (CSP sem script inline, nosniff, frame-ancestors) e lista branca de arquivos servidos.

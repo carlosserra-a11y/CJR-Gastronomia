@@ -3,15 +3,21 @@
    vieram, pratos escolhidos, pedidos de orçamento, cliques no WhatsApp.
    - Sem cookies e sem dados pessoais (nome, telefone e e-mail nunca saem daqui).
    - A visita é um código aleatório que some ao fechar a aba.
-   - Respeita "não rastrear" do navegador.
-   - Só funciona com o servidor da CJR (no GitHub Pages não há para onde enviar).
+   - Só liga depois que a pessoa aceita as estatísticas no aviso de cookies,
+     e respeita "não rastrear" / GPC do navegador.
+   - Grava no servidor da CJR (no GitHub Pages não há onde gravar) e, se o
+     Google Analytics estiver ativado, manda os mesmos eventos para ele.
    ============================================================ */
+import { gaFromTrack } from "./ga.js";
+
 const ENDPOINT = "api/track";
 const FLUSH_MS = 4000;
 const BATCH = 20;
 const SID_KEY = "cjr:sid";
 
-let enabled = false;
+let enabled = false; // estatísticas aceitas
+let serverOn = false; // há servidor para gravar
+let listening = false;
 let session = "";
 let queue = [];
 let timer = 0;
@@ -70,6 +76,8 @@ function flush() {
 /** Registra uma ação. Pedidos e cliques no WhatsApp saem na hora; o resto vai em lote. */
 export function track(type, data = {}) {
   if (!enabled) return;
+  gaFromTrack(type, data);
+  if (!serverOn) return;
   queue.push({ type, data });
   if (type === "lead" || type === "whatsapp" || queue.length >= BATCH) flush();
   else if (!timer) timer = setTimeout(flush, FLUSH_MS);
@@ -96,16 +104,30 @@ function onClick(e) {
   track("lead", { ...info, src: a.dataset.lead });
 }
 
-/** Liga as estatísticas. `server`: o cardápio veio do servidor (há onde gravar). */
+export const trackingOn = () => enabled;
+
+/** Liga as estatísticas (só chamar com consentimento). `server`: o cardápio veio do servidor (há onde gravar). */
 export function initTracking({ server }) {
-  if (enabled || !server || navigator.globalPrivacyControl || navigator.doNotTrack === "1") return;
+  if (enabled || navigator.globalPrivacyControl || navigator.doNotTrack === "1") return;
   enabled = true;
+  serverOn = Boolean(server);
   const sid = sessionId();
   session = sid.id;
-  if (sid.isNew) track("visit", visitInfo());
+  if (serverOn && sid.isNew) track("visit", visitInfo());
+  if (listening) return;
+  listening = true;
   document.addEventListener("click", onClick, true);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
   window.addEventListener("pagehide", flush);
+}
+
+/** Desliga na hora (consentimento retirado): nada mais é enviado e o código da visita é apagado. */
+export function stopTracking() {
+  if (!enabled) return;
+  flush();
+  enabled = false;
+  serverOn = false;
+  try { sessionStorage.removeItem(SID_KEY); } catch { /* sem armazenamento */ }
 }
 
 /** Seções da página inicial que a pessoa realmente viu (uma vez por seção). */

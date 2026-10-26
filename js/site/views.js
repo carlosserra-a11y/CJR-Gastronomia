@@ -10,6 +10,7 @@ import { calculatorSection } from "./calculator.js";
 import { reviewsSection } from "./reviews.js";
 import { whatsappUrl, EVENT_TYPES, LIMITS, todayISO } from "../shared/quote.js";
 import * as store from "./store.js";
+import { LEGAL_PAGES, fillLegal, legalBlocks, formatCnpj } from "../shared/legal.js";
 
 const itemCount = (cat) => cat.groups.reduce((n, g) => n + g.items.length, 0);
 const isRich = (item) => Boolean(item.desc || item.includes?.length || item.image);
@@ -286,7 +287,7 @@ export function categoryView(menu, cat) {
     const rich = g.items.some(isRich);
     return html`
     <section class="group" id="g-${g.id}">
-      ${multiGroup ? html`<h2 class="group-title" data-reveal><span>${g.name}</span><small>${g.items.length}</small></h2>` : ""}
+      ${multiGroup ? html`<h2 class="group-title" data-reveal><span>${g.name}</span><small>${g.items.length}</small></h2>` : html`<h2 class="sr-only">Opções de ${cat.name}</h2>`}
       ${g.note ? html`<p class="note">${g.note}</p>` : ""}
       <div class="${rich ? "pkg-grid" : "opt-grid"}">
         ${g.items.map((it, n) => (rich ? packageCard(cat, it, s, n) : optionRow(cat, it, s)))}
@@ -384,7 +385,7 @@ export function quoteView(menu, draft) {
             <label class="check-inline"><input type="checkbox" name="dateUndefined" ${d.dateUndefined ? "checked" : ""}><span>Ainda não tenho data definida</span></label>`)}
           ${field("guests", "Número estimado de convidados", html`<input class="input" id="q_guests" name="guests" type="number" inputmode="numeric" min="1" max="${LIMITS.guestsMax}" step="1" value="${d.guests || ""}" required>`)}
         </div>
-        ${field("place", "Local ou cidade do evento", html`<input class="input" id="q_place" name="place" autocomplete="address-level2" maxlength="${LIMITS.place}" placeholder="Ex.: salão de festas, empresa, cidade" value="${d.place || ""}" required>`)}
+        ${field("place", "Cidade ou bairro do evento", html`<input class="input" id="q_place" name="place" autocomplete="address-level2" maxlength="${LIMITS.place}" placeholder="Ex.: Florianópolis, Campeche" value="${d.place || ""}" required>`)}
       </fieldset>
 
       <fieldset class="fs" data-reveal>
@@ -399,12 +400,12 @@ export function quoteView(menu, draft) {
 
       <fieldset class="fs" data-reveal>
         <legend><span>04</span> Detalhes</legend>
-        ${field("notes", raw("Observações, restrições alimentares e necessidades especiais <small>(opcional)</small>"), html`<textarea class="input textarea" id="q_notes" name="notes" rows="4" maxlength="${LIMITS.notes}" placeholder="Horário, formato do serviço, convidados com restrições, estrutura do local…">${d.notes || ""}</textarea>`)}
+        ${field("notes", raw("Observações, restrições alimentares e necessidades especiais <small>(opcional)</small>"), html`<textarea class="input textarea" id="q_notes" name="notes" rows="4" maxlength="${LIMITS.notes}" placeholder="Horário, formato do serviço, estrutura do local… Restrições alimentares: informe só o necessário, sem nomes (ex.: 2 convidados sem glúten).">${d.notes || ""}</textarea>`)}
       </fieldset>
 
       <div class="field consent" data-field="consent" data-reveal>
         <label class="check-inline"><input type="checkbox" name="consent" ${d.consent ? "checked" : ""} required>
-          <span>Li o <a href="#/privacidade" target="_blank" rel="noopener">aviso de privacidade</a> e concordo com o uso dos meus dados para receber a proposta.</span></label>
+          <span>Li a <a href="#/privacidade" target="_blank" rel="noopener">Política de Privacidade</a> e estou ciente de que estes dados serão usados só para preparar a minha proposta.</span></label>
         <p class="err" id="q_consent_err" hidden></p>
       </div>
 
@@ -435,16 +436,39 @@ export function confirmView({ text, url, settings }) {
     </div>`;
 }
 
-/* ---------------- Privacidade ---------------- */
+/* ---------------- Páginas legais (privacidade, termos, reembolso) ---------------- */
 
-export function privacyView(menu) {
+const legalBlock = (b) => {
+  if (b.type === "h") return html`<h2 id="${b.id}" tabindex="-1">${b.text}</h2>`;
+  if (b.type === "ul") return html`<ul>${b.items.map((i) => html`<li>${i}</li>`)}</ul>`;
+  return html`<p>${b.text}</p>`;
+};
+
+export function legalView(kind, menu) {
+  const page = LEGAL_PAGES[kind];
+  const blocks = legalBlocks(fillLegal(menu.content[page.key], menu.settings, menu.content));
+  const heads = blocks.filter((b) => b.type === "h");
   return html`
-  <section class="page-hero">
+  <section class="page-hero legal-hero">
     <a class="back-link" href="#/">${ui.back}<span>Início</span></a>
-    <p class="kicker">Transparência</p>
-    <h1 class="page-title">${splitWords("Aviso de privacidade")}</h1>
+    <p class="kicker">${page.kicker}</p>
+    <h1 class="page-title">${splitWords(page.title)}</h1>
   </section>
-  <section class="section prose-page"><div class="prose">${paragraphs(menu.content.privacyText)}</div></section>`;
+  <section class="section legal-page">
+    <div class="legal-grid">
+      ${heads.length ? html`<nav class="legal-toc" aria-label="Nesta página">
+        <p class="legal-toc-title">Nesta página</p>
+        <ol>${heads.map((h) => html`<li><a href="#/${kind}" data-scroll-to="${h.id}" data-toc="${h.id}">${h.text}</a></li>`)}</ol>
+      </nav>` : ""}
+      <div class="prose legal-prose" data-reveal>
+        ${blocks.length ? blocks.map(legalBlock) : html`<p>Texto em preparação.</p>`}
+        ${kind === "privacidade" ? html`<p><button type="button" class="btn btn-gold" data-consent-open><span>Preferências de cookies</span></button></p>` : ""}
+      </div>
+    </div>
+    <nav class="legal-more" aria-label="Outros documentos">
+      ${Object.entries(LEGAL_PAGES).filter(([k]) => k !== kind).map(([k, p]) => html`<a class="legal-card" href="#/${k}"><small>${p.kicker}</small><strong>${p.title}</strong>${ui.arrow}</a>`)}
+    </nav>
+  </section>`;
 }
 
 /* ---------------- Rodapé ---------------- */
@@ -471,8 +495,15 @@ export function footerView(menu) {
   </div>
   <div class="footer-base">
     <span>© ${year} ${s.brandName}. Todos os direitos reservados.</span>
-    <span><a href="#/privacidade">Aviso de privacidade</a> · <a href="admin/" rel="nofollow">Área da equipe</a></span>
-  </div>`;
+    ${s.legalName || s.cnpj ? html`<span>${s.legalName}${s.cnpj ? ` · CNPJ ${formatCnpj(s.cnpj)}` : ""}${s.legalAddress ? ` · ${s.legalAddress}` : ""}</span>` : ""}
+  </div>
+  <nav class="footer-legal" aria-label="Informações legais">
+    <a href="#/privacidade">Privacidade e cookies</a>
+    <a href="#/termos">Termos de uso</a>
+    <a href="#/reembolso">Cancelamento e reembolso</a>
+    <button type="button" class="link-btn" data-consent-open>Preferências de cookies</button>
+    <a href="admin/" rel="nofollow">Área da equipe</a>
+  </nav>`;
 }
 
 export const loadingView = () => raw('<div class="loading" role="status"><span class="spinner" aria-hidden="true"></span><span>Preparando o cardápio…</span></div>');

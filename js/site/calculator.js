@@ -65,7 +65,7 @@ export function calculatorSection(c) {
         </fieldset>
         <a class="calc-live" href="#calcResult" data-scroll-to="calcResult" aria-hidden="true" tabindex="-1"></a>
       </form>
-      <aside class="calc-result" id="calcResult" aria-label="Resultado da calculadora"></aside>
+      <div class="calc-result" id="calcResult" role="region" aria-label="Resultado da calculadora"></div>
       <p class="sr-only" role="status" id="calcStatus"></p>
     </div>
   </section>`;

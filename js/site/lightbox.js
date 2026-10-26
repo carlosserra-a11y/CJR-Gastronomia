@@ -39,7 +39,7 @@ function lightbox() {
     <div class="layer-backdrop" data-close></div>
     <div class="lb" role="dialog" aria-modal="true" aria-label="Foto do portfólio">
       <div class="lb-bar" aria-hidden="true"><i></i></div>
-      <header class="lb-top">
+      <div class="lb-top">
         <span class="lb-count"></span>
         <div class="lb-mode" role="group" aria-label="Como passar as fotos">
           <button type="button" data-lb-mode="still" aria-pressed="true">Parado</button>
@@ -47,19 +47,19 @@ function lightbox() {
         </div>
         <button type="button" class="lb-btn lb-zoom" data-lb-zoom aria-pressed="false" aria-label="Ampliar a foto">${zoomIcon}</button>
         <button type="button" class="lb-btn lb-close" data-close aria-label="Fechar">${ui.close}</button>
-      </header>
+      </div>
       <div class="lb-stage">
         <img class="lb-img" alt="" draggable="false">
         <span class="lb-loading" aria-hidden="true"></span>
         <button type="button" class="lb-btn lb-prev" data-lb="-1" aria-label="Foto anterior">${ui.back}</button>
         <button type="button" class="lb-btn lb-next" data-lb="1" aria-label="Próxima foto">${ui.arrow}</button>
       </div>
-      <footer class="lb-cap">
+      <div class="lb-cap">
         <span class="lb-text"></span>
         <a class="lb-cta" target="_blank" rel="noopener" hidden>${ui.whats}<span>Quero algo assim</span></a>
         <span class="lb-hint lb-hint-touch">Deslize para trocar · toque duas vezes ou pince para ampliar · arraste para baixo para fechar</span>
         <span class="lb-hint lb-hint-mouse">Clique duas vezes para ampliar · setas do teclado para trocar · Esc para fechar</span>
-      </footer>
+      </div>
     </div>`);
   document.body.appendChild(layer);
   return layer;

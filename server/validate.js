@@ -5,6 +5,7 @@
    ============================================================ */
 import { TIERS, PORTFOLIO_CATEGORIES } from "../js/shared/menu.js";
 import { CALC_KINDS } from "../js/shared/calculator.js";
+import { isValidCnpj } from "../js/shared/legal.js";
 
 export class ValidationError extends Error {
   constructor(message, field) { super(message); this.status = 400; this.field = field; }
@@ -73,6 +74,19 @@ function email(v, field) {
   return s;
 }
 
+function cnpj(v) {
+  const d = String(v ?? "").replace(/\D/g, "");
+  if (d && !isValidCnpj(d)) fail("CNPJ inválido: confira os 14 números.", "cnpj");
+  return d;
+}
+
+/** Código do Google Analytics 4 (G-XXXXXXXXXX). Vazio = desligado. */
+function gaId(v) {
+  const s = str(v, { field: "Google Analytics", max: 20 }).toUpperCase();
+  if (s && !/^G-[A-Z0-9]{4,15}$/.test(s)) fail("Google Analytics: use o ID da métrica, que começa com G- (ex.: G-AB12CD34EF).", "gaId");
+  return s;
+}
+
 /* ---------- Partes do documento ---------- */
 
 function settings(input) {
@@ -92,6 +106,10 @@ function settings(input) {
     serviceArea: str(input.serviceArea, { field: "Região atendida", max: 120 }),
     showPrices: bool(input.showPrices, false),
     priceNote: str(input.priceNote, { field: "Observação sobre valores", max: 300 }),
+    legalName: str(input.legalName, { field: "Razão social", max: 120 }),
+    cnpj: cnpj(input.cnpj),
+    legalAddress: str(input.legalAddress, { field: "Cidade/UF ou endereço da empresa", max: 160 }),
+    gaId: gaId(input.gaId),
   };
 }
 
@@ -185,7 +203,10 @@ function content(input) {
     reviews,
     ctaTitle: s("ctaTitle", "Chamada final — título", 100),
     ctaText: s("ctaText", "Chamada final — texto", 300, true),
-    privacyText: str(input.privacyText, { field: "Aviso de privacidade", required: true, max: 5000, multiline: true }),
+    privacyText: str(input.privacyText, { field: "Política de privacidade", required: true, max: 12000, multiline: true }),
+    termsText: str(input.termsText, { field: "Termos de uso", max: 12000, multiline: true }),
+    refundText: str(input.refundText, { field: "Cancelamento e reembolso", max: 12000, multiline: true }),
+    legalUpdated: s("legalUpdated", "Data da última atualização dos textos legais", 40),
   };
 }
 

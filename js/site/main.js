@@ -6,14 +6,18 @@
 import { $, $$, setHTML, toast, finePointer } from "./util.js";
 import { initMotion, onFrame, motion, scan, scrollTo, measure } from "./motion.js";
 import { initCursor } from "./cursor.js";
+import { initAmbient } from "./ambient.js";
 import { mountPortfolio } from "./portfolio.js";
 import { mountCalculator } from "./calculator.js";
 import { mountReviews } from "./reviews.js";
 import { loadMenu, hasServer } from "./api.js";
-import { initTracking, track, watchSections } from "./track.js";
+import { initTracking, stopTracking, track, watchSections } from "./track.js";
+import { initConsent, onConsent } from "./consent.js";
+import { enableGA, disableGA, gaPage } from "./ga.js";
 import { indexMenu } from "../shared/menu.js";
 import * as store from "./store.js";
 import * as V from "./views.js";
+import { LEGAL_PAGES } from "../shared/legal.js";
 import { bindQuote, getDraft } from "./quote-view.js";
 import { openLayer, closeLayer, closeAll } from "./dialog.js";
 
@@ -30,8 +34,10 @@ boot();
 async function boot() {
   // Cada rota decide a própria rolagem; a restauração do navegador abriria a página no meio após recarregar.
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  startAtTop();
   initMotion();
   initCursor();
+  initAmbient();
   bindGlobal();
   setHTML(view, V.loadingView());
   const intro = wait(root.classList.contains("intro") ? 1500 : 0);
@@ -45,7 +51,12 @@ async function boot() {
   }
   app.idx = indexMenu(app.menu);
   store.initStore(app.idx);
-  initTracking({ server: hasServer() });
+  // estatísticas e Google Analytics só com o "Aceitar" do aviso de cookies
+  const applyConsent = (c) => {
+    if (c?.stats) { initTracking({ server: hasServer() }); enableGA(app.menu.settings.gaId); } else { stopTracking(); disableGA(); }
+  };
+  applyConsent(initConsent());
+  onConsent((c) => { applyConsent(c); if (c.stats) gaPage(); });
   setHTML($("#footer"), V.footerView(app.menu));
   const wa = V.greetingUrl(app.menu.settings);
   $$("[data-whats]").forEach((a) => { if (wa) { a.href = wa; a.hidden = false; } });
@@ -59,6 +70,17 @@ async function boot() {
     await route({ first: true });
   } finally {
     finishIntro(); // mesmo se a primeira tela falhar, a abertura nunca fica presa
+  }
+}
+
+/**
+ * Recarregar a página ou voltar a ela pelo histórico abre sempre no início: a aba guarda o último
+ * endereço (#/portfolio, #/orcamento…) e o site abria no meio. Links compartilhados de propósito continuam valendo.
+ */
+function startAtTop() {
+  const nav = performance.getEntriesByType?.("navigation")?.[0];
+  if (location.hash && nav && (nav.type === "reload" || nav.type === "back_forward")) {
+    history.replaceState(null, "", location.pathname + location.search);
   }
 }
 
@@ -102,7 +124,7 @@ function parse() {
   if (a === "servicos" && b) return { name: "category", id: b };
   if (HOME_SECTIONS.has(a)) return { name: "home", section: a };
   if (a === "orcamento") return { name: "quote" };
-  if (a === "privacidade") return { name: "privacy" };
+  if (a === "privacidade" || a === "termos" || a === "reembolso") return { name: "legal", kind: a };
   return { name: "home" };
 }
 
@@ -112,7 +134,7 @@ async function route({ first = false } = {}) {
   const r = parse();
   if (!r) return;
   const token = ++navToken; // a navegação mais recente sempre vence (ex.: clicar e voltar durante a transição)
-  const key = `${r.name}:${r.id || ""}`;
+  const key = `${r.name}:${r.id || r.kind || ""}`;
   closeAll();
   if (key === app.key) { // mesma tela: só rola até a seção
     view.classList.remove("is-leaving");
@@ -164,9 +186,10 @@ function render(r) {
     app.cleanups.push(bindQuote(view, app.menu));
     document.title = `Orçamento · ${brand}`;
   }
-  if (name === "privacy") {
-    setHTML(view, V.privacyView(app.menu));
-    document.title = `Aviso de privacidade · ${brand}`;
+  if (name === "legal") {
+    setHTML(view, V.legalView(r.kind, app.menu));
+    document.title = `${LEGAL_PAGES[r.kind].title} · ${brand}`;
+    app.cleanups.push(mountLegal(view));
   }
   app.route = name;
   document.body.dataset.route = name;
@@ -327,6 +350,20 @@ function homeEffects() {
   return () => { stop(); io.disconnect(); window.removeEventListener("resize", size); };
 }
 
+/** Páginas legais: o índice destaca a seção que está sendo lida. */
+function mountLegal(root) {
+  const links = $$("[data-toc]", root);
+  if (!links.length || !("IntersectionObserver" in window)) return () => {};
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      links.forEach((a) => a.classList.toggle("is-current", a.dataset.toc === en.target.id));
+    }
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  links.forEach((a) => { const h = $(`#${a.dataset.toc}`, root); if (h) io.observe(h); });
+  return () => io.disconnect();
+}
+
 /* ---------------- Seleção (contadores e botões) ---------------- */
 
 function syncSelection() {
@@ -418,7 +455,14 @@ function bindGlobal() {
       return;
     }
     const to = e.target.closest("[data-scroll-to]");
-    if (to) { e.preventDefault(); scrollTo($(`#${to.dataset.scrollTo}`), { offset: -150 }); return; }
+    if (to) {
+      e.preventDefault();
+      const target = $(`#${to.dataset.scrollTo}`);
+      if (!target) return;
+      scrollTo(target, { offset: -150 });
+      if (target.hasAttribute("tabindex")) target.focus({ preventScroll: true }); // leitor de tela e teclado seguem para a seção
+      return;
+    }
     if (e.target.closest("[data-reload]")) { e.preventDefault(); location.reload(); return; }
     // link para a mesma rota (o navegador não dispara hashchange): rola até a seção
     const a = e.target.closest('a[href^="#/"]');

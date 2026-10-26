@@ -116,7 +116,7 @@ function render(view, s) {
     </div>
     ${panel("Horários de mais visitas", "Hora em que as visitas começam (horário de Brasília).", columns(s.hours.map((n, h) => ({ label: `${h}h`, n })), { label: "Visitas por hora", every: 4, one: "visita", many: "visitas" }))}
     ${panel("Últimos pedidos de orçamento", "Sem nome, telefone ou e-mail: esses dados vão só para o WhatsApp da equipe.", leadsTable(s.recentLeads))}
-    <p class="help stat-foot">Estatísticas anônimas, sem cookies. Quem ativa "não rastrear" no navegador não é contado. Os dados ficam guardados por cerca de 13 meses.</p>`);
+    <p class="help stat-foot">Estatísticas anônimas: só contam as visitas de quem aceitou as estatísticas no aviso de cookies (LGPD) e não usa "não rastrear" no navegador. Por isso os números ficam abaixo do total real de visitas. Os dados ficam guardados por cerca de 13 meses.</p>`);
 }
 
 export async function statsView(view) {

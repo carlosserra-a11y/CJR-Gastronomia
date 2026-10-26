@@ -131,8 +131,12 @@ export function textsView(view) {
     </section>
 
     <section class="panel">
-      <h3>Aviso de privacidade</h3>
-      ${area("Texto", "content.privacyText", { rows: 10, max: 5000, help: "Explique como os dados do formulário são usados (LGPD)." })}
+      <h3>Textos legais (LGPD e consumidor)</h3>
+      <p class="help">Use "## " no começo da linha para um título de seção e "- " para itens de lista. Os marcadores {{empresa}}, {{cnpj}}, {{endereco}}, {{contato}}, {{marca}} e {{atualizado}} são trocados pelos dados de "Contato e configurações". Antes de mudar regras de cancelamento ou de dados, vale consultar um advogado.</p>
+      ${field("Data da última atualização", "content.legalUpdated", { max: 40, placeholder: "Ex.: 25 de outubro de 2026" })}
+      ${area("Política de privacidade e cookies", "content.privacyText", { rows: 14, max: 12000 })}
+      ${area("Termos de uso", "content.termsText", { rows: 12, max: 12000 })}
+      ${area("Cancelamento e reembolso", "content.refundText", { rows: 10, max: 12000 })}
     </section>`);
   view.replaceChildren(pane);
   window.scrollTo(0, scroll);
@@ -183,6 +187,16 @@ export function settingsView(view) {
       <h3>Contato e marca</h3>
       <div class="grid-2">${field("Nome da marca", "settings.brandName", { max: 60 })}${field("Região atendida (opcional)", "settings.serviceArea", { max: 120, placeholder: "Ex.: Porto Alegre e Região Metropolitana" })}</div>
       <div class="grid-2">${field("E-mail (opcional)", "settings.email", { type: "email", max: 120 })}${field("Instagram (opcional)", "settings.instagram", { max: 80, placeholder: "usuario, sem @" })}</div>
+    </section>
+    <section class="panel">
+      <h3>Dados legais da empresa</h3>
+      <p class="help">Aparecem no rodapé e nos textos legais (Código de Defesa do Consumidor e LGPD pedem a identificação de quem vende).</p>
+      <div class="grid-2">${field("Razão social", "settings.legalName", { max: 120 })}${field("CNPJ", "settings.cnpj", { max: 18, placeholder: "00.000.000/0000-00" })}</div>
+      ${field("Cidade/UF (ou endereço completo)", "settings.legalAddress", { max: 160, placeholder: "Ex.: Santo Amaro da Imperatriz/SC" })}
+    </section>
+    <section class="panel">
+      <h3>Google Analytics</h3>
+      ${field("ID da métrica (G-…)", "settings.gaId", { max: 20, placeholder: "G-AB12CD34EF", help: "Opcional. Só carrega para quem aceitar as estatísticas no aviso de cookies. Deixe vazio para desligar." })}
     </section>
     <section class="panel">
       <h3>Preços</h3>

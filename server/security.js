@@ -100,15 +100,15 @@ export function rateLimiter({ windowMs, max }) {
 export function contentSecurityPolicy({ https = false } = {}) {
   return [
     "default-src 'self'",
-    "script-src 'self'",
-    // folhas de estilo só do site e do Google Fonts; atributos style="" (variáveis CSS das animações) liberados
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "style-src-elem 'self' https://fonts.googleapis.com",
+    "script-src 'self' https://www.googletagmanager.com", // Google Analytics: só carrega com ID no painel e consentimento
+    // folhas de estilo só do site; atributos style="" (variáveis CSS das animações) liberados
+    "style-src 'self' 'unsafe-inline'",
+    "style-src-elem 'self'",
     "style-src-attr 'unsafe-inline'",
-    "font-src 'self' https://fonts.gstatic.com",
+    "font-src 'self'", // fontes hospedadas no próprio site
     "img-src 'self' data: blob: https:",
     "media-src 'self'",
-    "connect-src 'self'",
+    "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
     "manifest-src 'self'",
     "frame-src 'none'",
     "frame-ancestors 'none'",
@@ -132,7 +132,7 @@ export function securityHeaders({ hsts = false } = {}) {
     res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
     res.setHeader("Origin-Agent-Cluster", "?1");
     res.setHeader("Content-Security-Policy", contentSecurityPolicy({ https }));
-    if (https) res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+    if (https) res.setHeader("Strict-Transport-Security", "max-age=63072000");
     next();
   };
 }

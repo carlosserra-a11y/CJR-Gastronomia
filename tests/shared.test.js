@@ -300,3 +300,30 @@ test("relatório: conta visitas, pedidos (sem duplicar), pratos e origem", async
   assert.equal(s.guests.avg, 50);
   assert.equal(s.funnel[3].n, 1);
 });
+
+/* ---------- Textos legais ---------- */
+
+test("textos legais: títulos, listas e dados da empresa", async () => {
+  const { legalBlocks, fillLegal, isValidCnpj, formatCnpj } = await import("../js/shared/legal.js");
+  const blocks = legalBlocks("Intro.\n\n## 1. Título\nTexto da seção\ncontinua.\n\n- item a\n- item b");
+  assert.deepEqual(blocks.map((b) => b.type), ["p", "h", "p", "ul"]);
+  assert.equal(blocks[1].text, "1. Título");
+  assert.equal(blocks[1].id, "sec-1-titulo");
+  assert.equal(blocks[2].text, "Texto da seção continua.");
+  assert.deepEqual(blocks[3].items, ["item a", "item b"]);
+  const s = { legalName: "Empresa X LTDA", cnpj: "69543105000193", whatsapp: "5548996835439", brandName: "CJR" };
+  assert.equal(fillLegal("{{empresa}} · {{cnpj}} · {{contato}} · {{endereco}} · {{outro}}", s), "Empresa X LTDA · 69.543.105/0001-93 · WhatsApp (48) 99683-5439 · (a informar) · {{outro}}");
+  assert.ok(isValidCnpj("69.543.105/0001-93"));
+  assert.ok(!isValidCnpj("69.543.105/0001-90") && !isValidCnpj("11111111111111") && !isValidCnpj("123"));
+  assert.equal(formatCnpj("69543105000193"), "69.543.105/0001-93");
+});
+
+test("o texto legal do site não tem marcador sem dado nem marcador desconhecido", async () => {
+  const { fillLegal } = await import("../js/shared/legal.js");
+  for (const key of ["privacyText", "termsText", "refundText"]) {
+    const out = fillLegal(seed.content[key], seed.settings, seed.content);
+    assert.ok(out.length > 500, key);
+    assert.ok(!out.includes("(a informar)"), `${key}: dado da empresa faltando`);
+    assert.ok(!/\{\{\w+\}\}/.test(out), `${key}: marcador desconhecido`);
+  }
+});
