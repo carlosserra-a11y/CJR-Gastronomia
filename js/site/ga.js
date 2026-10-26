@@ -24,9 +24,9 @@ export function enableGA(id) {
   document.head.appendChild(s);
 }
 
+/** Sem consentimento: desliga o envio e apaga cookies do GA (inclusive de visitas anteriores). */
 export function disableGA() {
-  if (!loadedId) return;
-  window[`ga-disable-${loadedId}`] = true;
+  if (loadedId) window[`ga-disable-${loadedId}`] = true;
   const host = location.hostname;
   const base = host.split(".").slice(-2).join(".");
   for (const name of document.cookie.split(";").map((c) => c.trim().split("=")[0]).filter((n) => /^_ga/.test(n))) {
